@@ -16,7 +16,7 @@ cancado_2006:
   quantity: "In-plane crystallite size L_a of nanographite" # What physical quantity does this calibration yield? (read from paper)
   relationship_or_equation: "L_a(nm) = (2.4 × 10⁻¹⁰) · λ_l⁴ · (I_D/I_G)⁻¹" # The exact relationship/equation as written in the primary paper
   constant_name: "(none given a symbol; bare numeric coefficient in Eq. 2)" # Symbolic name of the calibration constant as the paper denotes it
-  constant_value: 2.4 x 10⁻¹⁰ # Numeric value of the constant from the primary paper
+  constant_value: "2.4 x 10⁻¹⁰" # Numeric value of the constant from the primary paper
   constant_units: "nm⁻³" # Units attached to the constant value in the primary paper
   excitation_wavelength_nm: "457.9, 488, 514.5, 568, 647" # Laser excitation wavelength used in the paper, in nm
   intensity_definition: "integrated area (stated: 'integrated intensities (areas) of the D and G bands instead of ... peak amplitudes')" # How is band intensity defined (peak height, integrated area, ...) as stated/inferred
@@ -29,7 +29,7 @@ cancado_2011:
   quantity: "Point-defect density n_D (areal) in single-layer graphene" # What physical quantity does this calibration yield? (read from paper)
   relationship_or_equation: "n_D (cm⁻²) = [(1.8 ± 0.5) × 10²² / λ_L⁴] · (I_D/I_G)" # The exact relationship/equation as written in the primary paper
   constant_name: "(no symbol assigned; bare numeric coefficient in Eq. 6)"# Symbolic name of the calibration constant as the paper denotes it
-  constant_value: 1.8 × 10²² # Numeric value of the constant from the primary paper
+  constant_value: "1.8 × 10²²" # Numeric value of the constant from the primary paper
   constant_uncertainty: "± 0.5 × 10²²" # Reported uncertainty on the constant value from the primary paper
   constant_units: "cm⁻²·nm⁴" # Units attached to the constant value in the primary paper
   excitation_wavelength_nm: "514.5, 632.8, 785" # Laser excitation wavelength used in the paper, in nm
