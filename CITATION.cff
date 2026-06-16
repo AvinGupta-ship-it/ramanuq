@@ -1,0 +1,11 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "ramanuq"
+abstract: "A research package for quantitative Raman spectral analysis."
+type: software
+version: 0.0.0
+authors:
+  - family-names: "TODO"
+    given-names: "TODO"
+license: "TODO"
+repository-code: "TODO"

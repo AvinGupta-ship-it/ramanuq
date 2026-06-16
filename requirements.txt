@@ -1,0 +1,9 @@
+# Pinned runtime + dev dependencies for ramanuq.
+numpy==2.4.6
+scipy==1.17.1
+lmfit==1.3.4
+matplotlib==3.11.0
+PyYAML==6.0.3
+pandas==3.0.3
+pytest==9.1.0
+ruff==0.15.17
