@@ -44,6 +44,6 @@ What I learned today: Area parameterization is the load-bearing choice in linesh
 
 Unresolved issues / deferred: No CX-1 blockers. Non-blocking nits, if any, logged to carry into Day 3.
 
-Commit hash: 
+Commit hash: 4bca08e (Day 2 complete, CI green; initial commit 95aef56 + refimpl-packaging fix)
 
 Next action: Day 3 — Tier-A synthetic generator + Gate V1.
