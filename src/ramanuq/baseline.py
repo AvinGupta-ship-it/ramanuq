@@ -4,6 +4,13 @@ A single entry point :func:`estimate` supports polynomial baselines
 (``linear``, ``poly3``, ``poly5``) and an asymmetric-least-squares baseline
 (``als``, the Eilers-Boelens algorithm).  Every method returns a finite
 baseline array of the same length as the spectrum, plus a diagnostics dict.
+
+The ``none`` method returns an all-zero baseline (a no-op subtraction).  It
+exists so the pipeline can fit data that is already baseline-free -- in
+particular the Tier-A Gate V1 recovery spectra, where any nonzero baseline
+estimate would bias the recovered band areas.  ``none`` is deliberately *not*
+part of the studied baseline grid (it is not a background-estimation method); it
+must not be added to the configuration grid used for the Q1/Q2 studies.
 """
 
 from __future__ import annotations
@@ -51,7 +58,8 @@ def estimate(spec, method, **p):
     spec:
         A :class:`ramanuq.io.Spectrum`.
     method:
-        One of ``{"linear", "poly3", "poly5", "als"}``.
+        One of ``{"none", "linear", "poly3", "poly5", "als"}``.  ``none``
+        returns an all-zero baseline (no-op), for already-baseline-free input.
     **p:
         Method-specific overrides.  For ``als``: ``lam`` (default 1e5),
         ``p`` (default 0.01), ``niter`` (default 10).
@@ -65,7 +73,13 @@ def estimate(spec, method, **p):
     x = np.asarray(spec.shift, dtype=float)
     y = np.asarray(spec.intensity, dtype=float)
 
-    if method in _POLY_DEGREE:
+    if method == "none":
+        # No-op baseline: an exact zero array.  Used only for already
+        # baseline-free input (e.g. the Gate V1 recovery path); does not touch
+        # any of the estimating methods below.
+        baseline = np.zeros_like(y)
+        diagnostics = {"method": "none"}
+    elif method in _POLY_DEGREE:
         degree = _POLY_DEGREE[method]
         baseline, coeffs = _poly_baseline(x, y, degree)
         diagnostics = {"method": method, "degree": degree, "coeffs": coeffs}
@@ -78,7 +92,7 @@ def estimate(spec, method, **p):
     else:
         raise ValueError(
             f"unknown baseline method {method!r}; "
-            "expected one of linear, poly3, poly5, als"
+            "expected one of none, linear, poly3, poly5, als"
         )
 
     baseline = np.asarray(baseline, dtype=float)

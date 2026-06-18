@@ -26,6 +26,15 @@ fact.
 - **V6 — Cross-implementation agreement:** Independent implementations must agree
   within **1e-9 relative (analytic)** or **1e-6 relative (numerical)**.
 
+  ### Gate V1 — measured result (Day 3)
+- Pre-registered tolerance (UNCHANGED): < 0.1% relative recovery error, every noise-free case.
+- Execution date: 2026-06-18
+- Commit: <fill after you commit in Part 15>
+- Cases tested: <N> noise-free, baseline-free matched-recovery cases
+- Maximum relative error: 0.004%  (case: tierA_stage2_noisefree)
+- Status: PASS
+- Detail: tests/test_fit_recovery.py (@pytest.mark.validation); full -v output in CI run <link/path>
+
 ## Section 2 — Operational Ground-Truth Definition
 
 True band intensities are defined as coming from the generator's noiseless,

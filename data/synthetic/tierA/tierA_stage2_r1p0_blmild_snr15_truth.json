@@ -1,0 +1,56 @@
+{
+  "baseline_label": "mild_cubic",
+  "case_id": "tierA_stage2_r1p0_blmild_snr15",
+  "grid": {
+    "max": 1900.0,
+    "min": 800.0,
+    "step": 1.0
+  },
+  "id_ig_area_ratio_nominal": 1.0,
+  "peaks": [
+    {
+      "area": 1000.0,
+      "center": 1350.0,
+      "fwhm": 90.0,
+      "height": 7.07355302630646,
+      "lineshape": "lorentzian",
+      "name": "D",
+      "stage": 2
+    },
+    {
+      "area": 1000.0,
+      "center": 1585.0,
+      "fwhm": 70.0,
+      "height": 9.094568176679735,
+      "lineshape": "lorentzian",
+      "name": "G",
+      "stage": 2
+    },
+    {
+      "area": 300.0,
+      "center": 1500.0,
+      "fwhm": 120.0,
+      "height": 2.3485931967491287,
+      "lineshape": "gaussian",
+      "name": "D3",
+      "stage": 2
+    },
+    {
+      "area": 300.0,
+      "center": 1200.0,
+      "fwhm": 140.0,
+      "height": 2.0130798829278245,
+      "lineshape": "gaussian",
+      "name": "D4",
+      "stage": 2
+    }
+  ],
+  "recovery": false,
+  "seed": 20260615,
+  "snr_label": 15,
+  "spike": false,
+  "stage": 2,
+  "true_id_ig_area": 1.0,
+  "true_id_ig_height": 0.7777777777777777,
+  "wavelength_nm": 532.0
+}
