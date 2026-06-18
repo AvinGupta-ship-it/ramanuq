@@ -47,3 +47,15 @@ Unresolved issues / deferred: No CX-1 blockers. Non-blocking nits, if any, logge
 Commit hash: 4bca08e (Day 2 complete, CI green; initial commit 95aef56 + refimpl-packaging fix)
 
 Next action: Day 3 — Tier-A synthetic generator + Gate V1.
+
+TIER-A REALISM EYEBALL GATE — Day 3 — 2026-06-18
+Plots: tierA_stage1_r1p0_noiseless.png, tierA_stage2_r1p0_noiseless.png
+Stage-1: D ~1350, G ~1585, D' minor shoulder, sane widths, smooth (noiseless) — plausible.
+Stage-2: broad D/G + D3/D4 humps, disordered morphology — plausible.
+Two cases visibly different: yes.
+RATING: PASS
+My judgment: Generated spectra have correct peak heights and positions, plausible as fitted spectra collected from real samples
+(one sentence in your own words — e.g. how they compare to spectra you've measured)
+
+## Day 3 - Tier-A truth + Gate V1 - 2026-06-18
+Built the Tier-A in-family validation layer (synth.py + suite + Gate V1 + determinism tests) directing Claude Code Session A; 45 cases across stage {1,2} × ratio {0.1,0.5,1.0,2.0 (stage-1)} × baseline {none,mild,strong} × SNR {200,50,15} plus noise-free recovery cases; 45 CSV/45 truth JSON, bijective pairing verified by an independent shell audit and the schema test. Gate V1 recovered every noise-free matched case to < 0.004% relative error (worst: stage-2), confirming the generator and Day-2 fitter agree on conventions and the optimizer finds in-family truth — an implementation check, not an accuracy claim, which I'm careful to keep distinct from the Tier-B science. I personally verified truth is computed analytically from the noiseless band functions (not refit), that both true_id_ig_area and true_id_ig_height are stored (they differ by the Γ_G/Γ_D factor, ≈0.629 vs 1.0 at area-ratio 1.0 — the same area/height tension I flagged between Cançado 2006 and 2011), and that no calibration or prediction file changed. Realism gate: PASS — stage-1 reads like our cleaner graphene/CNT spectra, stage-2 like disordered rGO with D3/D4 shoulders; smoothness is expected for noiseless Tier-A. CX-2 raised one NIT (malformed-input coverage), logged for Day 4. Key insight: Tier A earns the right to run Tier B by proving the engine has no excuse to be wrong. Commit <55c9eae>. Next: Day 4 — Gate V2 baselines + the hostile generators and THE realism gate.
