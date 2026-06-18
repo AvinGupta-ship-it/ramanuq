@@ -32,3 +32,6 @@ src = ["src", "tests", "scripts"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+markers = [
+    "validation: pre-registered validation-gate tests (V1-V6)",
+]
