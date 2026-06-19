@@ -17,6 +17,16 @@ fact.
   range **0.90 to 0.98**.
 - **V2 — Baseline fit:** Baseline RMS error must be **below 2% of G-band
   height**.
+  - **V2 pairing clarification (Avin Gupta, 2026-06-18):** The 2% tolerance is
+    applied in-class — each baseline method is graded only on backgrounds it is
+    designed to represent. `linear` is tested on `none` only (a straight line
+    cannot represent a curved background, so grading it on `mild_cubic` or
+    `strong_curved` measures the estimator's mathematical limitation, not
+    baseline-layer correctness). `poly3`, `poly5`, and `als` are curved-baseline
+    estimators and are tested on all three severities (`none`, `mild_cubic`,
+    `strong_curved`), including severe curvature. The 2% threshold itself is
+    unchanged from pre-registration; this note fixes only the method→baseline
+    scope, which the original entry left unspecified.
 - **V3 — Hostile-spectrum bias:** At least one configuration class must achieve
   **mean absolute bias below 5%** on stage-1 hostile spectra at **SNR 50**.
 - **V4 — Selector sanity:** **Exact recovery** is required on rigged selector
