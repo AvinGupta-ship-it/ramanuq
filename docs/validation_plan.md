@@ -49,7 +49,7 @@ fact.
 - Pairing (per the 2026-06-18 in-class clarification above): linear tested on `none` only; poly3, poly5, als tested on `none`, `mild_cubic`, and `strong_curved`. 10 in-class (method, baseline) pairs total.
 - Measured: all 10 in-class pairs < 2% of reference G height. Worst case: poly3 on `strong_curved` = 1.97% (PASS, tight). poly5 and als pass on all three severities; linear passes on `none`.
 - Status: PASS
-- Detail: tests/test_baseline.py (@pytest.mark.validation), commit [HASH PENDING — fill after Day 4 commit].
+- Detail: tests/test_baseline.py (@pytest.mark.validation), commit [eo7ced4].
 
 ### Day 4 — additional measured results (Tier-B hostile suite)
 - Tier-B suite: 90 spectra (2 stages × 3 baseline severities × 3 SNR × 5 instances), each with paired CSV + both-definition truth JSON. 90/90 pairing, no orphans.
