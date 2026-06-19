@@ -1,0 +1,96 @@
+{
+  "bands": [
+    {
+      "family": "composite_lorentzians",
+      "n_sub": 6,
+      "name": "D",
+      "nominal_center": 1350.0,
+      "sub_areas": [
+        217.07377702460883,
+        164.98407002696754,
+        222.89577071785098,
+        93.78288950218729,
+        208.09025862602743,
+        93.17323410235794
+      ],
+      "sub_centers": [
+        1359.2814353691306,
+        1372.7081373012707,
+        1360.7350216143368,
+        1355.8249382870754,
+        1341.67826585845,
+        1365.6691901253298
+      ],
+      "sub_fwhms": [
+        11.125683858009458,
+        19.758934149955497,
+        15.792976563029905,
+        9.667551947673818,
+        22.580368736633112,
+        15.87299639562037
+      ],
+      "sub_heights": [
+        12.421120380559003,
+        5.315677470643412,
+        8.984997492383489,
+        6.175714605932098,
+        5.866794055647718,
+        3.736907739824143
+      ],
+      "total_area": 1000.0
+    },
+    {
+      "center": 1585.0,
+      "core_fwhm": 41.31620553437598,
+      "family": "emg",
+      "name": "G",
+      "tau": 16.98101316629628,
+      "total_area": 1000.0
+    },
+    {
+      "area": 300.0,
+      "center": 1500.0,
+      "eta": 0.47532518501729065,
+      "family": "mixed_voigt",
+      "fwhm": 120.0,
+      "name": "D3"
+    },
+    {
+      "area": 300.0,
+      "center": 1200.0,
+      "eta": 0.6291176659677731,
+      "family": "mixed_voigt",
+      "fwhm": 140.0,
+      "name": "D4"
+    }
+  ],
+  "baseline": {
+    "exp": null,
+    "frac": 0.0,
+    "gaussians": [],
+    "severity": "none",
+    "signal_scale": 31.33464199025467
+  },
+  "case_id": "tierB_stage2_blnone_snr15_i2",
+  "generator_families": [
+    "composite_lorentzians",
+    "emg",
+    "mixed_voigt"
+  ],
+  "grid": {
+    "max": 1900.0,
+    "min": 800.0,
+    "step": 1.0
+  },
+  "id_ig_area_ratio_nominal": 1.0,
+  "instance": 2,
+  "seed": 20260615,
+  "severity": "none",
+  "snr_label": 15,
+  "stage": 2,
+  "stage_label": "stage2",
+  "tier": "B",
+  "true_id_ig_area": 0.9905733666229491,
+  "true_id_ig_height": 1.7232956755539686,
+  "wavelength_nm": 532.0
+}

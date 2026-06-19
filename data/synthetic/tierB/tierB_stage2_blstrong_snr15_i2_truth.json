@@ -1,0 +1,98 @@
+{
+  "bands": [
+    {
+      "family": "composite_lorentzians",
+      "n_sub": 3,
+      "name": "D",
+      "nominal_center": 1350.0,
+      "sub_areas": [
+        259.2438169205752,
+        290.1709657907561,
+        450.58521728866856
+      ],
+      "sub_centers": [
+        1368.535213457742,
+        1367.4753308341103,
+        1339.2703421713018
+      ],
+      "sub_fwhms": [
+        14.989843111591156,
+        21.908755447954825,
+        13.47043017408017
+      ],
+      "sub_heights": [
+        11.01010454125832,
+        8.43172377491834,
+        21.29489962499264
+      ],
+      "total_area": 1000.0
+    },
+    {
+      "center": 1585.0,
+      "core_fwhm": 31.248039333491167,
+      "family": "emg",
+      "name": "G",
+      "tau": 34.229910415827895,
+      "total_area": 1000.0
+    },
+    {
+      "area": 300.0,
+      "center": 1500.0,
+      "eta": 0.24819018579297764,
+      "family": "mixed_voigt",
+      "fwhm": 120.0,
+      "name": "D3"
+    },
+    {
+      "area": 300.0,
+      "center": 1200.0,
+      "eta": 0.6784585265217891,
+      "family": "mixed_voigt",
+      "fwhm": 140.0,
+      "name": "D4"
+    }
+  ],
+  "baseline": {
+    "exp": {
+      "amp": 0.7941213779953078,
+      "decay": 770.6647478252846
+    },
+    "frac": 0.6,
+    "gaussians": [
+      {
+        "amp": 0.9339190794150912,
+        "center": 1468.1991235832365,
+        "width": 489.51748482397073
+      },
+      {
+        "amp": 0.3790640609210778,
+        "center": 1245.0515631765024,
+        "width": 230.63769077347033
+      }
+    ],
+    "severity": "strong",
+    "signal_scale": 23.303217171779547
+  },
+  "case_id": "tierB_stage2_blstrong_snr15_i2",
+  "generator_families": [
+    "composite_lorentzians",
+    "emg",
+    "mixed_voigt"
+  ],
+  "grid": {
+    "max": 1900.0,
+    "min": 800.0,
+    "step": 1.0
+  },
+  "id_ig_area_ratio_nominal": 1.0,
+  "instance": 2,
+  "seed": 20260615,
+  "severity": "strong",
+  "snr_label": 15,
+  "stage": 2,
+  "stage_label": "stage2",
+  "tier": "B",
+  "true_id_ig_area": 0.9905521825837359,
+  "true_id_ig_height": 1.468197176732346,
+  "wavelength_nm": 532.0
+}

@@ -1,0 +1,95 @@
+{
+  "bands": [
+    {
+      "family": "composite_lorentzians",
+      "n_sub": 3,
+      "name": "D",
+      "nominal_center": 1350.0,
+      "sub_areas": [
+        379.6262069474425,
+        403.9848556478747,
+        216.38893740468268
+      ],
+      "sub_centers": [
+        1353.57560834971,
+        1350.0917803088373,
+        1346.2547266677896
+      ],
+      "sub_fwhms": [
+        8.07250984144875,
+        24.46542651102816,
+        13.6805085329585
+      ],
+      "sub_heights": [
+        29.938340639827075,
+        10.51217099062509,
+        10.069616618530842
+      ],
+      "total_area": 1000.0
+    },
+    {
+      "center": 1585.0,
+      "core_fwhm": 33.89529647306579,
+      "family": "emg",
+      "name": "G",
+      "tau": 20.582365032674712,
+      "total_area": 1000.0
+    },
+    {
+      "area": 150.0,
+      "center": 1620.0,
+      "eta": 0.638945341083988,
+      "family": "mixed_voigt",
+      "fwhm": 18.0,
+      "name": "Dprime"
+    }
+  ],
+  "baseline": {
+    "exp": {
+      "amp": 0.8965597861866544,
+      "decay": 824.4965048890305
+    },
+    "frac": 0.6,
+    "gaussians": [
+      {
+        "amp": 0.37232518061237163,
+        "center": 1152.1060235214866,
+        "width": 449.4375043919863
+      },
+      {
+        "amp": 0.9493044522592469,
+        "center": 1636.418095283887,
+        "width": 343.0661250527103
+      },
+      {
+        "amp": 0.7042088496350233,
+        "center": 936.2066345497672,
+        "width": 238.45722598882315
+      }
+    ],
+    "severity": "strong",
+    "signal_scale": 44.400458156934064
+  },
+  "case_id": "tierB_stage1_blstrong_snr15_i4",
+  "generator_families": [
+    "composite_lorentzians",
+    "emg",
+    "mixed_voigt"
+  ],
+  "grid": {
+    "max": 1800.0,
+    "min": 1000.0,
+    "step": 1.0
+  },
+  "id_ig_area_ratio_nominal": 1.0,
+  "instance": 4,
+  "seed": 20260615,
+  "severity": "strong",
+  "snr_label": 15,
+  "stage": 1,
+  "stage_label": "stage1",
+  "tier": "B",
+  "true_id_ig_area": 0.9871424423157881,
+  "true_id_ig_height": 2.314819346945738,
+  "wavelength_nm": 532.0
+}

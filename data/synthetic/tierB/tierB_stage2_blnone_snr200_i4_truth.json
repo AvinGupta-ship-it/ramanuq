@@ -1,0 +1,92 @@
+{
+  "bands": [
+    {
+      "family": "composite_lorentzians",
+      "n_sub": 5,
+      "name": "D",
+      "nominal_center": 1350.0,
+      "sub_areas": [
+        227.23793455329601,
+        211.1870396903059,
+        124.26364393471451,
+        247.4124745382703,
+        189.89890728341322
+      ],
+      "sub_centers": [
+        1340.8733569650374,
+        1337.2782797720577,
+        1351.7203250512525,
+        1366.1381524063088,
+        1368.7602750428557
+      ],
+      "sub_fwhms": [
+        22.312719390003828,
+        12.695211768484398,
+        24.816718214238023,
+        24.698692726974937,
+        18.959449380165307
+      ],
+      "sub_heights": [
+        6.4834841347670364,
+        10.590279830414879,
+        3.187717732552459,
+        6.377166393484057,
+        6.3764193096289645
+      ],
+      "total_area": 1000.0
+    },
+    {
+      "center": 1585.0,
+      "core_fwhm": 41.449733925551826,
+      "family": "emg",
+      "name": "G",
+      "tau": 39.9733180499345,
+      "total_area": 1000.0
+    },
+    {
+      "area": 300.0,
+      "center": 1500.0,
+      "eta": 0.39595932177828813,
+      "family": "mixed_voigt",
+      "fwhm": 120.0,
+      "name": "D3"
+    },
+    {
+      "area": 300.0,
+      "center": 1200.0,
+      "eta": 0.5976874069903364,
+      "family": "mixed_voigt",
+      "fwhm": 140.0,
+      "name": "D4"
+    }
+  ],
+  "baseline": {
+    "exp": null,
+    "frac": 0.0,
+    "gaussians": [],
+    "severity": "none",
+    "signal_scale": 19.859227044817725
+  },
+  "case_id": "tierB_stage2_blnone_snr200_i4",
+  "generator_families": [
+    "composite_lorentzians",
+    "emg",
+    "mixed_voigt"
+  ],
+  "grid": {
+    "max": 1900.0,
+    "min": 800.0,
+    "step": 1.0
+  },
+  "id_ig_area_ratio_nominal": 1.0,
+  "instance": 4,
+  "seed": 20260615,
+  "severity": "none",
+  "snr_label": 200,
+  "stage": 2,
+  "stage_label": "stage2",
+  "tier": "B",
+  "true_id_ig_area": 0.988103357466084,
+  "true_id_ig_height": 1.5443298067883267,
+  "wavelength_nm": 532.0
+}

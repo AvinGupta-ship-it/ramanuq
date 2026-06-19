@@ -1,0 +1,103 @@
+{
+  "bands": [
+    {
+      "family": "composite_lorentzians",
+      "n_sub": 3,
+      "name": "D",
+      "nominal_center": 1350.0,
+      "sub_areas": [
+        273.19475094468197,
+        473.9190825761017,
+        252.88616647921634
+      ],
+      "sub_centers": [
+        1343.159365604133,
+        1346.6197901310502,
+        1336.3263025065908
+      ],
+      "sub_fwhms": [
+        8.265322829509827,
+        9.311283054301922,
+        23.000172515038557
+      ],
+      "sub_heights": [
+        21.042273090346537,
+        32.40222176801499,
+        6.9996141826173215
+      ],
+      "total_area": 1000.0
+    },
+    {
+      "center": 1585.0,
+      "core_fwhm": 29.474159009704834,
+      "family": "emg",
+      "name": "G",
+      "tau": 34.01664605031443,
+      "total_area": 1000.0
+    },
+    {
+      "area": 300.0,
+      "center": 1500.0,
+      "eta": 0.4762473853074252,
+      "family": "mixed_voigt",
+      "fwhm": 120.0,
+      "name": "D3"
+    },
+    {
+      "area": 300.0,
+      "center": 1200.0,
+      "eta": 0.6785552208446547,
+      "family": "mixed_voigt",
+      "fwhm": 140.0,
+      "name": "D4"
+    }
+  ],
+  "baseline": {
+    "exp": {
+      "amp": 0.9192531671963347,
+      "decay": 359.645357702439
+    },
+    "frac": 0.15,
+    "gaussians": [
+      {
+        "amp": 0.6398766546443265,
+        "center": 906.5310343249537,
+        "width": 280.7636497077864
+      },
+      {
+        "amp": 0.8750667100029934,
+        "center": 1004.2797310779478,
+        "width": 466.14889192106074
+      },
+      {
+        "amp": 0.8848351630819711,
+        "center": 1642.936003649902,
+        "width": 396.6944973879526
+      }
+    ],
+    "severity": "mild",
+    "signal_scale": 51.243020373011376
+  },
+  "case_id": "tierB_stage2_blmild_snr50_i4",
+  "generator_families": [
+    "composite_lorentzians",
+    "emg",
+    "mixed_voigt"
+  ],
+  "grid": {
+    "max": 1900.0,
+    "min": 800.0,
+    "step": 1.0
+  },
+  "id_ig_area_ratio_nominal": 1.0,
+  "instance": 4,
+  "seed": 20260615,
+  "severity": "mild",
+  "snr_label": 50,
+  "stage": 2,
+  "stage_label": "stage2",
+  "tier": "B",
+  "true_id_ig_area": 0.9927712492388487,
+  "true_id_ig_height": 3.155470201458887,
+  "wavelength_nm": 532.0
+}

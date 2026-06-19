@@ -108,3 +108,81 @@ Verification: `ruff check .` clean; full suite `python3 -m pytest` — 270 passe
 Gate V1 `pytest tests/test_fit_recovery.py -v -m validation` — 6 passed.
 Realism plots: `data/synthetic/tierA/figures/tierA_stage1_r1p0_noiseless.png`,
 `data/synthetic/tierA/figures/tierA_stage2_r1p0_noiseless.png`.
+
+### Day 4 — Session A (Tier-B hostile suite + Gate V2 implementer) — 2026-06-18 — Reviewed and verified accurate - Avin Gupta, 2026-06-18
+
+**Role:** Implementer (Session A). Executed the frozen Day 4 contract: finalized
+Gate V2, built the out-of-family Tier-B generator + tests, and produced the
+human realism-gate plots. No science, pre-registration, or tolerance was changed.
+
+**Files created/edited:**
+- `src/ramanuq/hostile.py` — Tier-B out-of-family generator. Band constructors
+  `composite_band` (3–7 jittered narrow Lorentzians → non-Lorentzian aggregate),
+  `emg_band` (Gaussian core convolved with a one-sided exponential of constant
+  `tau` → asymmetric), `mixed_voigt_band` (per-band `eta`), and `gp_baseline`
+  (a smooth random baseline = broad random Gaussians + a decaying exponential;
+  severities `none|mild|strong`). The name `gp_baseline` is a label only — it is
+  NOT a Gaussian-process regressor and imports no GP/sklearn library.
+  `generate(case, seed)` and `suite(out_dir, seed)` write the full crossing.
+- `tests/test_hostile.py` — generator-contract tests (determinism, truth-schema
+  completeness, finiteness, monotonic axis, parseable one-to-one filenames, full
+  90-cell coverage, physically valid params, both truth definitions, baseline
+  severity metadata, out-of-family proof, Tier-A untouched, no Day-5 scope).
+- `tests/test_baseline.py` — added Gate V2 (`@pytest.mark.validation`) and a
+  despike-no-op/idempotence test on clean (spike-free) input; existing tests kept.
+- `scripts/render_tierB.py` — renders four representative Tier-B PNGs.
+- `data/synthetic/tierB/` — 90 CSV + 90 `*_truth.json` + `manifest.csv` + figures.
+
+**Gate V2 (pre-registered, 2% of G-band height, UNCHANGED).** Finalized as a
+peak-free truth construction: a noiseless spectrum that is only the Tier-A
+baseline curve (no peaks), so baseline-estimation quality is isolated from peak
+confounding; the reference is the stage-1 analytic G-band height. One genuine
+ambiguity in the original V2 entry — the method→baseline pairing — was surfaced
+to the human BEFORE implementation (measured: `linear` 10.5% and `poly3` 1.97%
+on `strong_curved`, so a literal full cross-product is unpassable without
+weakening the frozen 2%). The human fixed the in-class pairing and recorded it in
+`validation_plan.md`: `linear` graded on `none` only (a straight line cannot
+represent a curved background); `poly3/poly5/als` graded on all three severities
+(`none`, `mild_cubic`, `strong_curved`). Gate V2 implements exactly that pairing;
+the 2% tolerance is unchanged. All 10 graded (method, baseline) pairs pass.
+
+**Tier-B truth.** True intensities come only from the noiseless, baseline-free
+band callables, computed BEFORE baseline and noise: `true_id_ig_area` is the
+numeric integral (trapezoid) of D over G; `true_id_ig_height` is `max(D)/max(G)`.
+For the composite D band, height truth is the max of the SUMMED callable, not the
+sum of sub-peak heights. Both definitions are stored in every truth JSON, along
+with all band parameters (sub-peak centers/widths/areas/heights, EMG `tau`,
+per-band `eta`), the baseline parameters + severity label, the seed, and the
+generator-family labels. Truth is never read back off the observed curve.
+
+**Suite & determinism.** Full crossing {stage1, stage2} × {none, mild, strong}
+× SNR {200, 50, 15} × 5 instances = 90 spectra exactly. A single project seed
+(`hostile.SEED`, shared with `synth.SEED`) feeds all randomness; per-case
+randomness derives from `SeedSequence([SEED, crc32(case_id)])`, so cases are
+independent yet reproducible. CSV columns `shift_cm-1,intensity` and the
+`{stem}.csv` ↔ `{stem}_truth.json` naming reuse the Day-3 conventions; case_ids
+encode stage/severity/SNR/instance.
+
+**Out-of-family proof.** `test_composite_and_emg_bands_are_out_of_family` fits the
+best *independent* single Lorentzian (scipy least-squares) to each composite D and
+EMG G band and asserts relative RMS residual > 1%. Measured worst-case margins:
+composite ≈ 5.1%, EMG ≈ 15.6% (both well above 1%). This proves out-of-family
+without any claim of physical realism.
+
+**Verification:** `ruff check .` clean; full suite `python3 -m pytest -q` —
+746 passed; Gate V2 `pytest tests/test_baseline.py -v` — 19 passed (10 V2 pairs +
+guard + despike + finiteness); validation marker `pytest -m validation` — 25
+passed; `tests/test_hostile.py` — 462 passed. Realism plots (4):
+`data/synthetic/tierB/figures/tierB_stage1_blnone_snr200_i0.png`,
+`tierB_stage1_blstrong_snr15_i2.png`, `tierB_stage2_blmild_snr50_i1.png`,
+`tierB_stage2_blstrong_snr15_i3.png`.
+
+What this session did NOT do: did NOT make the human Tier-B realism judgement
+(only produced the four labelled PNGs for inspection); did NOT alter
+`data/calibrations/calibrations.yaml`, the Q2 prediction, or anything in
+`validation_plan.md` (the in-class V2 pairing note was written by the human);
+did NOT change any pre-registered tolerance; did NOT modify Tier-A data; did NOT
+change Day-2 math (lineshapes/model/fit/baseline/despike) to force any result;
+did NOT change Day-3 truth values; did NOT create any Day-5 metric/calibration
+code; did NOT introduce any literature constant; did NOT begin any Q1/Q2/Q3 study
+or grid work; and did NOT implement a real Gaussian-process baseline.

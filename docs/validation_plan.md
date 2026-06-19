@@ -44,6 +44,19 @@ fact.
 - Maximum relative error: 0.000008% (case: tierA_stage1_r0p5_recovery, area definition)
 - Status: PASS
 - Stage-2 scope note: stage-2 is excluded from V1's strict bound because its truth mixes Lorentzian D/G with Gaussian D3/D4, while fit_spectrum applies a single lineshape to all bands — so no matched PipelineConfig exists. Documented residual (~41%) recorded in test_v1_stage2_excluded_with_documented_residual.
+### Gate V2 — measured result (Day 4)
+- Pre-registered tolerance (UNCHANGED): baseline RMS error < 2% of reference G-band height, per method, on peak-free Tier-A baselines.
+- Pairing (per the 2026-06-18 in-class clarification above): linear tested on `none` only; poly3, poly5, als tested on `none`, `mild_cubic`, and `strong_curved`. 10 in-class (method, baseline) pairs total.
+- Measured: all 10 in-class pairs < 2% of reference G height. Worst case: poly3 on `strong_curved` = 1.97% (PASS, tight). poly5 and als pass on all three severities; linear passes on `none`.
+- Status: PASS
+- Detail: tests/test_baseline.py (@pytest.mark.validation), commit [HASH PENDING — fill after Day 4 commit].
+
+### Day 4 — additional measured results (Tier-B hostile suite)
+- Tier-B suite: 90 spectra (2 stages × 3 baseline severities × 3 SNR × 5 instances), each with paired CSV + both-definition truth JSON. 90/90 pairing, no orphans.
+- Non-Lorentzianity (out-of-family proof): best independent single-Lorentzian fit leaves relative RMS residual > 1% on every band. Measured: composite D 5.1%–53.3%, EMG G 15.6%–21.7% — gate cleared by >5× worst case. Status: PASS.
+- Determinism: all 90 cases reproduce bit-for-bit (same case_id + seed → identical CSV + truth); confirmed by full 90-case regeneration cross-check in CX-3 review. Status: PASS.
+- Tier-B realism eyeball gate (human, Avin Gupta): PASS — four representative spectra judged visibly non-Lorentzian yet realistic, consistent with real disordered-carbon spectra. Recorded in docs/tierB_realism_gate.md.
+- CX-3 numerical edge-case review: 0 blockers, 2 recorded NITs (pre-existing design consequences). Recorded in docs/cx3_review_day4.md.
 - Detail: tests/test_fit_recovery.py (@pytest.mark.validation); verified live via matched-config readout on 2026-06-18.
 
 ## Section 2 — Operational Ground-Truth Definition

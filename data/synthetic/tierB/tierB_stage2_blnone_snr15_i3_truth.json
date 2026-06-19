@@ -1,0 +1,92 @@
+{
+  "bands": [
+    {
+      "family": "composite_lorentzians",
+      "n_sub": 5,
+      "name": "D",
+      "nominal_center": 1350.0,
+      "sub_areas": [
+        163.88069295511954,
+        162.09484445463158,
+        226.18461238516716,
+        217.3128711592292,
+        230.52697904585256
+      ],
+      "sub_centers": [
+        1357.0124410377587,
+        1356.8323017278233,
+        1372.438112379666,
+        1367.975089695712,
+        1357.5101740138239
+      ],
+      "sub_fwhms": [
+        17.4435030595063,
+        18.815316718053065,
+        17.20709877988581,
+        14.714647077104482,
+        12.966890435983558
+      ],
+      "sub_heights": [
+        5.981005597821848,
+        5.484509483683251,
+        8.368266974675338,
+        9.401902053444111,
+        11.317904909375834
+      ],
+      "total_area": 1000.0
+    },
+    {
+      "center": 1585.0,
+      "core_fwhm": 33.774471723953084,
+      "family": "emg",
+      "name": "G",
+      "tau": 33.13521594436169,
+      "total_area": 1000.0
+    },
+    {
+      "area": 300.0,
+      "center": 1500.0,
+      "eta": 0.4657919594347553,
+      "family": "mixed_voigt",
+      "fwhm": 120.0,
+      "name": "D3"
+    },
+    {
+      "area": 300.0,
+      "center": 1200.0,
+      "eta": 0.5927862997272328,
+      "family": "mixed_voigt",
+      "fwhm": 140.0,
+      "name": "D4"
+    }
+  ],
+  "baseline": {
+    "exp": null,
+    "frac": 0.0,
+    "gaussians": [],
+    "severity": "none",
+    "signal_scale": 28.36052849176399
+  },
+  "case_id": "tierB_stage2_blnone_snr15_i3",
+  "generator_families": [
+    "composite_lorentzians",
+    "emg",
+    "mixed_voigt"
+  ],
+  "grid": {
+    "max": 1900.0,
+    "min": 800.0,
+    "step": 1.0
+  },
+  "id_ig_area_ratio_nominal": 1.0,
+  "instance": 3,
+  "seed": 20260615,
+  "severity": "none",
+  "snr_label": 15,
+  "stage": 2,
+  "stage_label": "stage2",
+  "tier": "B",
+  "true_id_ig_area": 0.9907414527389967,
+  "true_id_ig_height": 1.8224994156742407,
+  "wavelength_nm": 532.0
+}

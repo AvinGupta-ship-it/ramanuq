@@ -1,0 +1,84 @@
+{
+  "bands": [
+    {
+      "family": "composite_lorentzians",
+      "n_sub": 5,
+      "name": "D",
+      "nominal_center": 1350.0,
+      "sub_areas": [
+        140.70626889336398,
+        215.26759148534967,
+        211.2697896826408,
+        147.53763132046058,
+        285.218718618185
+      ],
+      "sub_centers": [
+        1328.5378870042484,
+        1340.1661048571968,
+        1327.929777565372,
+        1373.9422253919363,
+        1342.6723921430535
+      ],
+      "sub_fwhms": [
+        9.913492167303582,
+        17.543261970144236,
+        9.310713846496526,
+        12.272443800096022,
+        19.879161834585407
+      ],
+      "sub_heights": [
+        9.035806087487876,
+        7.811751618527194,
+        14.445565359794537,
+        7.653355337927794,
+        9.133980458158943
+      ],
+      "total_area": 1000.0
+    },
+    {
+      "center": 1585.0,
+      "core_fwhm": 30.987293688479188,
+      "family": "emg",
+      "name": "G",
+      "tau": 26.990907120679054,
+      "total_area": 1000.0
+    },
+    {
+      "area": 150.0,
+      "center": 1620.0,
+      "eta": 0.34320811420099195,
+      "family": "mixed_voigt",
+      "fwhm": 18.0,
+      "name": "Dprime"
+    }
+  ],
+  "baseline": {
+    "exp": null,
+    "frac": 0.0,
+    "gaussians": [],
+    "severity": "none",
+    "signal_scale": 29.053823369395847
+  },
+  "case_id": "tierB_stage1_blnone_snr200_i0",
+  "generator_families": [
+    "composite_lorentzians",
+    "emg",
+    "mixed_voigt"
+  ],
+  "grid": {
+    "max": 1800.0,
+    "min": 1000.0,
+    "step": 1.0
+  },
+  "id_ig_area_ratio_nominal": 1.0,
+  "instance": 0,
+  "seed": 20260615,
+  "severity": "none",
+  "snr_label": 200,
+  "stage": 1,
+  "stage_label": "stage1",
+  "tier": "B",
+  "true_id_ig_area": 0.9881097490708532,
+  "true_id_ig_height": 1.628064011062126,
+  "wavelength_nm": 532.0
+}
