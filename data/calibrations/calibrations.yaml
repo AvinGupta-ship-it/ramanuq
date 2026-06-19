@@ -6,6 +6,7 @@ tuinstra_koenig_1970:
   constant_units: "n/a" # Units attached to the constant value in the primary paper
   excitation_wavelength_nm: "488" # Laser excitation wavelength used in the paper, in nm
   intensity_definition: "height (inferred: no fitting, ratio of maxima)" # How is band intensity defined (peak height, integrated area, ...) as stated/inferred
+  intensity_kind: "height"
   validity: "stage-1 nanocrystalline graphite" # Stated range of validity / applicability from the primary paper
   role_in_project: "foundational observation; calibrated constant taken from Cancado 2006/2011" # How this calibration is used within RamanUQ
   citation: "Tuinstra & Koenig, J. Chem. Phys. 53, 1126 (1970)" # Full citation, to be transcribed from the primary source
@@ -16,10 +17,11 @@ cancado_2006:
   quantity: "In-plane crystallite size L_a of nanographite" # What physical quantity does this calibration yield? (read from paper)
   relationship_or_equation: "L_a(nm) = (2.4 × 10⁻¹⁰) · λ_l⁴ · (I_D/I_G)⁻¹" # The exact relationship/equation as written in the primary paper # confirmed: wavelength form (lambda in nm), not the energy form (E_L in eV)
   constant_name: "(none given a symbol; bare numeric coefficient in Eq. 2)" # Symbolic name of the calibration constant as the paper denotes it
-  constant_value: "2.4-e10" # Numeric value of the constant from the primary paper
+  constant_value: "2.4e-10" # Numeric value of the constant from the primary paper
   constant_units: "nm^-3" # Units attached to the constant value in the primary paper
   excitation_wavelength_nm: "457.9, 488, 514.5, 568, 647" # Laser excitation wavelength used in the paper, in nm # wavelengths used to calibrate; lambda is an input to the equation
   intensity_definition: "integrated area (stated: 'integrated intensities (areas) of the D and G bands instead of ... peak amplitudes')" # How is band intensity defined (peak height, integrated area, ...) as stated/inferred
+  intensity_kind: "area"
   validity: "visible range of excitation laser energies used in the work (1.92–2.71 eV; ~647–457.9 nm)" # Stated range of validity / applicability from the primary paper
   citation: "Cançado et al., Appl. Phys. Lett. 88, 163106 (2006)" # Full citation, to be transcribed from the primary source
   doi: "10.1063/1.2196057" # DOI of the primary paper
@@ -34,8 +36,14 @@ cancado_2011:
   constant_units: "cm^-2 nm^4" # Units attached to the constant value in the primary paper
   excitation_wavelength_nm: "514.5, 632.8, 785" # Laser excitation wavelength used in the paper, in nm # wavelengths used to calibrate; lambda is an input to the equation
   intensity_definition: "peak intensity ratio (heights), explicitly decoupled from area ratio (A_D/A_G); peaks fit, but the working relation uses I_D/I_G amplitudes not integrated areas" # How is band intensity defined (peak height, integrated area, ...) as stated/inferred
+  intensity_kind: "height"
   validity: "low-defect-density / stage-1 regime, L_D ≥ 10 nm, visible-range excitation; only defects that activate the D peak" # Stated range of validity / applicability from the primary paper
   guard_notes: "I_D/I_G is non-monotonic: it peaks near L_D ~3 nm, so one ratio can map to two defect densities (above/below the max). Disambiguate with the G-band width Γ_G, which stays ~14 cm⁻¹ in stage 1 but is much larger in stage 2. Silent defects (perfect zigzag edges, charged impurities, intercalants, strain) produce no D peak and are not captured. ~±30% experimental error band." # Conditions/caveats that guard correct application of this calibration #wavelength in the denominator for 2011, in the numerator for 2006
   citation: "Cançado et al., Nano Lett. 11, 3190 (2011)" # Full citation, to be transcribed from the primary source
   doi: "10.1021/nl201432g" # DOI of the primary paper
   access_date: "2026-06-15"  # Date the primary source was accessed
+
+stage_guard:
+  g_fwhm_max_cm1: 40 # G-band FWHM (cm^-1) above this => stage-2-like; suppress La/nD
+  d3_over_g_area_max: 0.15  # fitted D3 area / fitted G area above this => stage-2-like
+  source: "Documented assumption (Day 5). Anchored to project synthetic truth: stage 1 G FWHM ~22 cm^-1, no D3; stage-2 G FWHM ~70 cm^-1, D3 ~30% of G. Cancado-2011 notes Gamma_G ~14 cm^-1 stage-1, much larger in stage-2. Thresholds sit between the regimes so the guard fires on stage-2 and never on stage-1."

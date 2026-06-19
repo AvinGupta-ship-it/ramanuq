@@ -1,6 +1,6 @@
 # AI Usage Log
 
-## 2026-06-18 — Day 2, Implementer (Session A) — DRAFT (unsigned)
+## 2026-06-18 — Day 2, Implementer (Session A) — Avin Gupta, 6/18/2026
 
 **Role:** Implementer (Session A). Built the core analysis modules and their
 unit/behavioral tests against the contracts supplied in the session prompt.
@@ -186,3 +186,72 @@ change Day-2 math (lineshapes/model/fit/baseline/despike) to force any result;
 did NOT change Day-3 truth values; did NOT create any Day-5 metric/calibration
 code; did NOT introduce any literature constant; did NOT begin any Q1/Q2/Q3 study
 or grid work; and did NOT implement a real Gaussian-process baseline.
+
+### Day 5 — Session A (metrics + calibration-wiring implementer) — AG 2026-06-19
+
+**Role:** Implementer (Session A). Executed the frozen Day 5 contract: built the
+calibration loader, the `Metrics` container, and `compute_metrics`, wrote
+`docs/calibration_provenance.md` and `tests/test_metrics.py`. All scientific
+decisions — the hand-pin numbers, the calibration constants/equations, the
+intensity-definition matching, and the stage-guard thresholds — are the human's
+and were taken as-is from `data/calibrations/calibrations.yaml`. No
+pre-registration, Q2 prediction, tolerance, or truth file was touched.
+
+**Files created/edited:**
+- `src/ramanuq/metrics.py` — `load_calibrations(path)` validates per-calibration
+  provenance (non-empty `citation`, `doi`, `validity`, `intensity_definition`),
+  treats `stage_guard` as the only permitted non-calibration top-level key,
+  raises (never silently skips) on any other top-level entry lacking
+  `intensity_definition`, and parses constant strings to float (raising, never
+  defaulting, on unparseable values; `"n/a"` denotes no project constant). A
+  frozen `Metrics` dataclass with the contract field list. `compute_metrics(fit,
+  calibrations, definition)` reads every constant and the wavelength from the
+  loaded YAML / `fit.meta["wavelength_nm"]`; no calibration constant is
+  hard-coded. Each calibration is fed the ratio under its own declared intensity
+  definition (Cançado 2006 → area, Cançado 2011 → height), classified from the
+  YAML `intensity_definition` field. `la_tk` and `l_d` are intentional NaN with
+  flags. The stage guard suppresses the calibrated quantities (but not `id_ig`)
+  to NaN, flags the reason, and warns.
+- `src/ramanuq/fit.py` — one-line, numerically/scientifically neutral addition:
+  `meta["wavelength_nm"] = float(spec.wavelength_nm)` so `FitResult` carries the
+  excitation wavelength that `compute_metrics` consumes. No fit math, gate, or
+  tolerance changed (decision confirmed with the human before editing).
+- `docs/calibration_provenance.md` — summary of provenance already in the YAML
+  (citation, DOI, access date, equation, constant + units + uncertainty,
+  intensity definition, validity), plus notes that `la_tk`/`l_d` are intentional
+  NaN and that the stage-guard thresholds are documented assumptions. No source
+  fact not already in the YAML was introduced.
+- `tests/test_metrics.py` — hand-pin (532 nm, ratios == 1 → `la == 19.2246202982`,
+  `n_d == 2.2471185038e11`), constant-uncertainty propagation, intensity-definition
+  wiring (area/height not swapped), stage guard fires (both conditions; G-only,
+  no D3) and does not false-fire, provenance-validation raises (missing
+  citation/doi/intensity_definition against tmp copies), no-hard-coded-constants
+  source scan, and interval sanity.
+- `data/calibrations/calibrations.yaml` — fixed ONE stray trailing double-quote
+  (`stage-1.""` → `stage-1."`) at EOF that prevented the file from parsing at
+  all. Pure YAML-syntax fix; no scientific content (constants, equations,
+  citations, definitions, thresholds) was altered. The `2.4-e10`→`2.4e-10`
+  correction and the `stage_guard` block were already present in the working
+  tree (human edits).
+
+**FitResult fields read.** Areas/FWHMs from `fit.best["D_area"]`,
+`best["G_area"]`, `best["D_fwhm"]`, `best["G_fwhm"]`; optional D3 from
+`best["D3_area"]` (guard's D3 condition skipped when absent). Bootstrap rows from
+`fit.bootstrap_df` (same column names). Wavelength from `fit.meta["wavelength_nm"]`.
+Height-from-area via `lineshapes.lorentzian_height_from_area`.
+
+**Verification:** `python3 -m ruff check .` — clean. `python3 -m pytest
+tests/test_metrics.py -v` — 11 passed. Hand-pin, constant-uncertainty,
+definition-wiring, both stage-guard fire cases, no-false-fire, all three
+provenance-raise cases, no-hard-coded-constants scan, and interval sanity all
+green. `tests/test_fit.py`, `tests/test_fit_recovery.py`, `tests/test_smoke.py`
+still pass (11) after the one-line `fit.py` meta addition.
+
+What this session did NOT do: did NOT change the hand-pin numbers (the human's);
+did NOT alter calibrations.yaml scientific content (only fixed one stray quote so
+it parses); did NOT modify Tier-A or Tier-B truth files; did NOT touch
+`validation_plan.md`, the Q2 prediction, or any pre-registration/tolerance; did
+NOT hard-code any calibration constant (a source scan in the tests enforces this);
+did NOT edit `tests/test_differential_v6.py` or do any V6 work; and did NOT begin
+any Day-6+ work (no grid.py, selectors.py, mdc.py, robust.py, viz.py,
+reporting.py).

@@ -35,6 +35,13 @@ fact.
   spectrum** must be reproduced within **±10%**.
 - **V6 — Cross-implementation agreement:** Independent implementations must agree
   within **1e-9 relative (analytic)** or **1e-6 relative (numerical)**.
+  V6 (metrics) — Day 5 result 6/19/2026: GREEN. metrics.py vs clean-room refimpl/ref_metrics.py
+agree on 1500 randomized cases — ratios rtol<1e-9, La/n_D/const-uncertainty rtol<1e-6, stage-guard
+boolean+reasons exact. Constants load identically from calibrations.yaml on both sides.
+Hand-pin #2 (mine): La=19.2246 nm, n_D=2.2471e11 cm^-2 at 532 nm, I_D/I_G=1.0 — metrics.py matches.
+Tier-1 L3 read complete, verdict Y. Found + fixed a latent area/height routing bug (prose word-order
+classifier replaced with explicit intensity_kind field). Stage guard fires on stage-2 (G FWHM>40 cm^-1
+or D3/G>0.15), NaNs calibrated quantities + flag + warning, id_ig stays valid; no false-fire on stage-1.
 
 ### Gate V1 — measured result (Day 3)
 - Pre-registered tolerance (UNCHANGED): < 0.1% relative recovery error, every stage-1 noise-free, baseline-free matched-recovery case (both area and height truth definitions).

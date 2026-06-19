@@ -149,6 +149,7 @@ def fit_spectrum(spec, config, n_boot=200, seed=None):
     meta = {
         "scale": scale,
         "sigma": sigma,
+        "wavelength_nm": float(spec.wavelength_nm),
         "baseline": base_diag,
         "n_boot": n_boot,
     }

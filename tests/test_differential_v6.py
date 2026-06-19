@@ -10,12 +10,16 @@ Tolerances:
   * full-array profile comparisons and the information criteria: rtol < 1e-6
 """
 
+import os
+import warnings
+
 import numpy as np
 import pytest
 
 # Implementations under test (main package).
 from ramanuq.lineshapes import lorentzian, gaussian, pseudo_voigt, bwf
 from ramanuq.fit import aic, bic
+from ramanuq.metrics import load_calibrations, compute_metrics
 
 # Clean-room references.
 from refimpl.ref_lineshapes import (
@@ -29,11 +33,40 @@ from refimpl.ref_lineshapes import (
     gaussian_area_from_height as ref_gaussian_area_from_height,
 )
 from refimpl.ref_criteria import aic as ref_aic, bic as ref_bic
+from refimpl.ref_metrics import (
+    ref_load_calibrations,
+    ref_id_ig_area,
+    ref_id_ig_height,
+    ref_la_cancado2006,
+    ref_n_d_cancado2011,
+    ref_n_d_const_uncertainty,
+    ref_stage_guard,
+)
 
 RTOL_ANALYTIC = 1e-9
 RTOL_NUMERIC = 1e-6
 N_CASES = 500
 SEED = 20240617
+
+# Single calibration file feeds BOTH loaders (identical constants on each side).
+CAL_PATH = os.path.normpath(
+    os.path.join(
+        os.path.dirname(__file__), "..", "data", "calibrations", "calibrations.yaml"
+    )
+)
+_PKG_CALS = load_calibrations(CAL_PATH)
+_REF_CALS = ref_load_calibrations(CAL_PATH)
+
+# Reference-side constants, read from the clean-room loader (no hard-coding).
+C2006 = _REF_CALS["cancado_2006"]["constant_value"]
+C2011 = _REF_CALS["cancado_2011"]["constant_value"]
+C2011_UNC = _REF_CALS["cancado_2011"]["constant_uncertainty"]
+G_FWHM_MAX = float(_REF_CALS["stage_guard"]["g_fwhm_max_cm1"])
+D3_OVER_G_MAX = float(_REF_CALS["stage_guard"]["d3_over_g_area_max"])
+
+# Package guard reasons are namespaced with this prefix; the clean-room guard
+# emits the bare reason token. Strip it before comparing the reason set.
+_GUARD_PREFIX = "stage2_guard:"
 
 
 def _make_cases(rng):
@@ -145,3 +178,179 @@ def test_bic_matches_reference():
         got = bic(n, k, rss)
         ref = ref_bic(n, k, rss)
         np.testing.assert_allclose(got, ref, rtol=RTOL_NUMERIC, atol=0.0)
+
+
+# --------------------------------------------------------------------------- #
+# Metrics differential (Gate V6 extension): ramanuq.metrics vs ref_metrics.
+#
+# The package exposes the metrics only through ``compute_metrics``; there are no
+# standalone metric functions. We therefore build a minimal FitResult-like stub
+# carrying ``best`` (the best-fit band parameters) and ``meta`` (wavelength), and
+# feed the clean-room reference the identical scalars pulled from the same case.
+# Both sides read the same calibration file, so the constants are identical.
+# --------------------------------------------------------------------------- #
+class _FitStub:
+    """Minimal stand-in that ``compute_metrics`` accepts.
+
+    ``compute_metrics`` reads ``fit.best``, ``fit.meta['wavelength_nm']`` and
+    ``getattr(fit, 'bootstrap_df', None)``. With no bootstrap frame the interval
+    fields come back NaN; this test never inspects intervals.
+    """
+
+    def __init__(self, best, wavelength_nm):
+        self.best = best
+        self.meta = {"wavelength_nm": wavelength_nm}
+        self.bootstrap_df = None
+
+
+def _make_band_case(rng, *, g_fwhm_lo, g_fwhm_hi):
+    """One randomized valid set of band scalars (areas, FWHMs, wavelength)."""
+    return {
+        "D_area": rng.uniform(0.5, 500.0),     # area > 0
+        "G_area": rng.uniform(0.5, 500.0),     # area > 0
+        "D_fwhm": rng.uniform(5.0, 200.0),     # physical FWHM range
+        "G_fwhm": rng.uniform(g_fwhm_lo, g_fwhm_hi),
+        "wavelength_nm": rng.uniform(450.0, 650.0),  # visible excitation
+    }
+
+
+@pytest.mark.validation
+def test_calibration_constants_match_reference():
+    """Both loaders read the same file and yield the same float constants."""
+    assert (
+        _PKG_CALS["cancado_2006"]["constant_value"]
+        == _REF_CALS["cancado_2006"]["constant_value"]
+    )
+    assert (
+        _PKG_CALS["cancado_2011"]["constant_value"]
+        == _REF_CALS["cancado_2011"]["constant_value"]
+    )
+    assert (
+        _PKG_CALS["cancado_2011"]["constant_uncertainty"]
+        == _REF_CALS["cancado_2011"]["constant_uncertainty"]
+    )
+    assert (
+        float(_PKG_CALS["stage_guard"]["g_fwhm_max_cm1"])
+        == float(_REF_CALS["stage_guard"]["g_fwhm_max_cm1"])
+    )
+    assert (
+        float(_PKG_CALS["stage_guard"]["d3_over_g_area_max"])
+        == float(_REF_CALS["stage_guard"]["d3_over_g_area_max"])
+    )
+
+
+@pytest.mark.validation
+def test_id_ig_ratios_match_reference():
+    """Area ratio and height ratio agree (closed-form, RTOL_ANALYTIC)."""
+    rng = np.random.default_rng(SEED + 10)
+    for _ in range(N_CASES):
+        # Full physical G-FWHM range: id_ig is reported even when guarded.
+        c = _make_band_case(rng, g_fwhm_lo=5.0, g_fwhm_hi=200.0)
+        fit = _FitStub(
+            {
+                "D_area": c["D_area"],
+                "G_area": c["G_area"],
+                "D_fwhm": c["D_fwhm"],
+                "G_fwhm": c["G_fwhm"],
+            },
+            c["wavelength_nm"],
+        )
+        m_area = compute_metrics(fit, _PKG_CALS, "area")
+        m_height = compute_metrics(fit, _PKG_CALS, "height")
+
+        ref_area = ref_id_ig_area(c["D_area"], c["G_area"])
+        ref_height = ref_id_ig_height(
+            c["D_area"], c["D_fwhm"], c["G_area"], c["G_fwhm"]
+        )
+        np.testing.assert_allclose(m_area.id_ig, ref_area, rtol=RTOL_ANALYTIC, atol=0.0)
+        np.testing.assert_allclose(
+            m_height.id_ig, ref_height, rtol=RTOL_ANALYTIC, atol=0.0
+        )
+
+
+@pytest.mark.validation
+def test_calibrated_metrics_match_reference():
+    """La, n_D and its constant-uncertainty agree (RTOL_NUMERIC).
+
+    G-FWHM is held below the stage-2 threshold and no D3 area is supplied, so
+    the calibrated quantities stay finite (un-suppressed) on both sides.
+    """
+    rng = np.random.default_rng(SEED + 11)
+    for _ in range(N_CASES):
+        c = _make_band_case(rng, g_fwhm_lo=5.0, g_fwhm_hi=G_FWHM_MAX - 0.1)
+        lam = c["wavelength_nm"]
+        fit = _FitStub(
+            {
+                "D_area": c["D_area"],
+                "G_area": c["G_area"],
+                "D_fwhm": c["D_fwhm"],
+                "G_fwhm": c["G_fwhm"],
+            },
+            lam,
+        )
+        m = compute_metrics(fit, _PKG_CALS, "area")
+        assert m.flags == (
+            "tk_foundational_no_project_constant",
+            "ld_equation_not_recorded",
+        ), "case unexpectedly guarded; calibrated metrics would be NaN"
+
+        # Reference ratios from the same scalars: La uses area, n_D uses height.
+        area_ratio = ref_id_ig_area(c["D_area"], c["G_area"])
+        height_ratio = ref_id_ig_height(
+            c["D_area"], c["D_fwhm"], c["G_area"], c["G_fwhm"]
+        )
+        ref_la = ref_la_cancado2006(area_ratio, lam, C2006)
+        ref_nd = ref_n_d_cancado2011(height_ratio, lam, C2011)
+        ref_nd_unc = ref_n_d_const_uncertainty(ref_nd, C2011, C2011_UNC)
+
+        np.testing.assert_allclose(
+            m.la_cancado2006, ref_la, rtol=RTOL_NUMERIC, atol=0.0
+        )
+        np.testing.assert_allclose(m.n_d, ref_nd, rtol=RTOL_NUMERIC, atol=0.0)
+        np.testing.assert_allclose(
+            m.n_d_const_uncertainty, ref_nd_unc, rtol=RTOL_NUMERIC, atol=0.0
+        )
+
+
+@pytest.mark.validation
+def test_stage_guard_matches_reference():
+    """Stage-2 guard decision + reason set agree exactly.
+
+    G-FWHM straddles the threshold and the D3/G area ratio straddles its
+    threshold; every third case omits D3 entirely (the None-D3 path).
+    """
+    rng = np.random.default_rng(SEED + 12)
+    for i in range(N_CASES):
+        c = _make_band_case(rng, g_fwhm_lo=20.0, g_fwhm_hi=60.0)  # straddles 40
+        best = {
+            "D_area": c["D_area"],
+            "G_area": c["G_area"],
+            "D_fwhm": c["D_fwhm"],
+            "G_fwhm": c["G_fwhm"],
+        }
+
+        if i % 3 == 2:
+            d3_or_none = None  # no D3 supplied -> guard skips the D3 check
+        else:
+            # D3/G area ratio straddles the 0.15 threshold.
+            d3_or_none = rng.uniform(0.0, 0.30) * c["G_area"]
+            best["D3_area"] = d3_or_none
+
+        fit = _FitStub(best, c["wavelength_nm"])
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            m = compute_metrics(fit, _PKG_CALS, "area")
+
+        pkg_reasons = {
+            flag[len(_GUARD_PREFIX):]
+            for flag in m.flags
+            if flag.startswith(_GUARD_PREFIX)
+        }
+        pkg_triggered = bool(pkg_reasons)
+
+        ref_triggered, ref_reasons = ref_stage_guard(
+            c["G_fwhm"], c["G_area"], d3_or_none, G_FWHM_MAX, D3_OVER_G_MAX
+        )
+
+        assert pkg_triggered == ref_triggered
+        assert pkg_reasons == set(ref_reasons)
