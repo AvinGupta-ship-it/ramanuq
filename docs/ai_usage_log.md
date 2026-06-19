@@ -51,7 +51,7 @@ Findings: 2 flagged blockers, 11 nits. Resolved before commit: BWF q=0 division 
 
 Reviewed and verified accurate — Avin Gupta, 2026-06-18
 
-### Day 3 — Session A (Tier-A truth + Gate V1 implementer) — 2026-06-18
+### Day 3 — Session A (Tier-A truth + Gate V1 implementer) — 2026-06-18. Reviewed and approved — AG, 2026-06-18.
 Model: Claude Code (Opus 4.8), implementer in the main repo.
 Delegated: implement `src/ramanuq/synth.py` (Tier-A in-family synthetic generator),
 write the paired CSV + `*_truth.json` Tier-A suite under `data/synthetic/tierA/`,
