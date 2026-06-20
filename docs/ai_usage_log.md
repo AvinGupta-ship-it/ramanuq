@@ -255,3 +255,42 @@ NOT hard-code any calibration constant (a source scan in the tests enforces this
 did NOT edit `tests/test_differential_v6.py` or do any V6 work; and did NOT begin
 any Day-6+ work (no grid.py, selectors.py, mdc.py, robust.py, viz.py,
 reporting.py).
+
+## 2026-06-20 — Pre-Day-6 bug fix, Implementer — Avin Gupta, 6/20/2026
+
+**Role:** Implementer. Hardened the ALS baseline against an environment-dependent
+non-finite result that turned GitHub Actions (Python 3.11 / Linux) red while the
+suite stayed green locally (Python 3.14 / macOS).
+
+**Defect:** `tests/test_fit.py::test_fit_never_raises_on_degenerate_input` feeds a
+perfectly flat spectrum (all-zero intensity). In `_als_baseline`, the first solve
+returns `z = 0`; the asymmetric weight update `p*(y>z) + (1-p)*(y<z)` then drives
+*every* weight to zero (no point is strictly above or below the smooth). The next
+iteration's system collapses to `lam * DᵀD`, which is rank-deficient by two (its
+null space is the constant and linear ramps) and therefore exactly singular.
+`spsolve` on that singular matrix returns non-finite values on the Linux LAPACK
+backend (macOS happens to return finite), tripping the finite-value guard, which
+correctly raised `ValueError` — violating the `fit.py` contract that
+`fit_spectrum` must never raise on degenerate input.
+
+**Fix (src/ramanuq/baseline.py only):** Added a tiny fixed diagonal ridge
+(`_ALS_RIDGE = 1e-9`, applied as `wmat + dtd + ridge`) so the normal-equations
+matrix is always positive-definite and the solve is finite on every backend. On
+well-conditioned inputs the weights are always p (0.01) or 1−p (0.99), so the
+system is already PD and the ridge — many orders below the smallest weight —
+does not measurably perturb the fit. The `(baseline, diagnostics)` signature and
+diagnostics contents are unchanged.
+
+**Verification:** `test_fit_never_raises_on_degenerate_input` PASSES; full suite
+763 passed / 0 failed; all 29 `-m validation` gates (V1/V2/V6) still pass; `ruff
+check .` clean. A direct check confirmed `baseline.estimate(flat_spectrum,
+method="als")` now returns an all-finite array (and exactly zeros for the flat
+input), and a normal ALS fit remains finite.
+
+**What was NOT touched:** no test was changed, loosened, or deleted; no tolerance
+was weakened; no other `src` module, `fit.py`, `metrics.py`,
+`calibrations.yaml`, any Tier-A/Tier-B truth file, `validation_plan.md`, or any
+other doc/pre-registration was edited. No science, data, or calibration constant
+was altered. No Day-6 work was begun (no grid.py, robust.py, or any new module).
+The finite-value guard that raises was left intact — the solver was fixed so it
+no longer produces non-finite values in the first place.

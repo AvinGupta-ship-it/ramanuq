@@ -26,6 +26,17 @@ _ALS_LAM = 1e5
 _ALS_P = 0.01
 _ALS_NITER = 10
 
+# Tiny diagonal ridge added to the ALS normal-equations matrix so the solve is
+# never exactly singular.  On a perfectly flat spectrum the asymmetric weights
+# all collapse to zero (no point is strictly above or below the smooth), leaving
+# only lam * D^T D, which is rank-deficient by two (its null space is the
+# constant and linear ramps).  That singular solve returns non-finite values on
+# some LAPACK backends (Linux CI) while returning finite values on others
+# (macOS).  The ridge makes the system positive-definite, so the solve is finite
+# on every backend; at 1e-9 it is many orders below the smallest weight (p) and
+# does not perturb well-conditioned fits.
+_ALS_RIDGE = 1e-9
+
 
 def _poly_baseline(x, y, degree):
     """Least-squares polynomial baseline of the given degree."""
@@ -41,11 +52,14 @@ def _als_baseline(y, lam, p, niter):
     # Second-order difference operator.
     d = sparse.diags([1.0, -2.0, 1.0], [0, 1, 2], shape=(n - 2, n), format="csc")
     dtd = lam * (d.T @ d)
+    # Diagonal ridge keeps wmat + dtd positive-definite even when every weight
+    # collapses to zero (flat input), so the solve never goes singular.
+    ridge = _ALS_RIDGE * sparse.eye(n, format="csc")
     w = np.ones(n)
     z = y.copy()
     for _ in range(niter):
         wmat = sparse.diags(w, 0, format="csc")
-        z = spsolve(wmat + dtd, w * y)
+        z = spsolve(wmat + dtd + ridge, w * y)
         w = p * (y > z) + (1.0 - p) * (y < z)
     return z
 
