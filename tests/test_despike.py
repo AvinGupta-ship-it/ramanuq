@@ -24,7 +24,7 @@ def _spectrum_with_spike():
 
 
 def test_spike_removed_peak_survives():
-    x, y, clean = _spectrum_with_spike()
+    _, y, clean = _spectrum_with_spike()
     out = despike(y, window=7, z_thresh=6.0)
     # Spike at channel 60 is suppressed close to the clean baseline level.
     assert out[60] < 50.0

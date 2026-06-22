@@ -22,7 +22,6 @@ Equations implemented (from the specification):
 from __future__ import annotations
 
 import math
-from typing import Optional
 
 import yaml
 
@@ -147,7 +146,7 @@ def ref_n_d_const_uncertainty(n_d: float, c2011: float, c2011_uncertainty: float
 def ref_stage_guard(
     g_fwhm: float,
     g_area: float,
-    d3_area_or_None: Optional[float],
+    d3_area_or_None: float | None,
     g_fwhm_max: float,
     d3_over_g_max: float,
 ) -> tuple[bool, list[str]]:
