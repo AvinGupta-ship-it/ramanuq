@@ -83,3 +83,78 @@ Day 5: Built the metrics layer — the bridge from fitted I_D/I_G to L_a and n_D
 **What I learned / what surprised me:** I expected a ranking with a winner and some caveats. Getting no winner felt wrong until I understood why — and then it became the most interesting result of the project. Also surprised that the simplest configs (DG/area, fewest parameters) are both the most accurate and the least dishonest; adding D′/D3/D4 bands didn't help, it overfit (~5× worse error). Complexity hurt. <commit: d6cf19?>
 
 **Next (Day 7):** Selector audit Q2. 
+
+## Q2 Verdict — Selector Audit (Day 7)
+
+**Prediction (Section 5, registered 2026-06-15, verbatim):**
+"I predict H_C (mixed), specifically that fit quality and I_D/I_G accuracy will be
+decoupled across different peak sets but loosely correlated within one fixed set.
+Practically: if you let the model pick from many different peak configurations, the
+best-scoring one often isn't the most accurate (high regret); but if all candidates
+share the same peaks, the best-scoring one usually is close to accurate (low regret).
+I expect the within-set correlation to be positive but weak, and weakest for messy
+spectra like hydrogenated SWCNTs and rGO."
+
+**Result** (synthetic_disordered_carbon suite, 30 spectra/cell; ρ = median per-spectrum
+Spearman, 95% spectrum-level bootstrap CI; regret in I_D/I_G units):
+- Full-stratum ρ: all medians within ±0.08 of zero (range −0.079 to +0.063); CI clears
+  zero in 4 of 9 cells (bic SNR15 +0.046 [+0.006,+0.078]; redchi SNR15 −0.079
+  [−0.142,−0.014]; redchi SNR200 −0.077 [−0.144,−0.001]; aic SNR200 −0.052
+  [−0.132,−0.001]) — the established ones for redchi lean negative.
+- Within-peak-set ρ: positive in all 9 cells; CI clears zero in only 3 (all SNR15:
+  aic +0.094 [+0.024,+0.160], bic +0.084 [+0.023,+0.180], redchi +0.081
+  [+0.024,+0.165]); the other 6 (SNR50, SNR200) straddle zero.
+- Regret: full-stratum 2–3× within-stratum at every SNR (SNR15: 1.37 vs ~0.44;
+  SNR50: 0.55–0.67 vs 0.28–0.34; SNR200: 0.88 vs 0.38–0.42).
+- T6b coverage under misspecification: 0.276 / 0.240 / 0.183 at SNR 15 / 50 / 200.
+
+**Sub-claim 1 — decoupling across peak sets (full grid):** Predicted full-stratum ρ near
+zero and high regret. ρ near zero with mostly straddling CIs, but 4 cells clear zero
+(decoupling holds for most, not all cells). Full regret is 2–3× within regret at every
+SNR (the high-regret prediction holds). → **PARTIALLY CONFIRMED** (regret contrast strong;
+ρ near-zero but a few faint effects, redchi leaning slightly negative).
+
+**Sub-claim 2 — coupling within a fixed peak set:** Predicted within-set ρ positive and
+low regret. Median ρ positive in all 9 cells, but the CI clears zero in only 3 (all at
+SNR15); the other 6 straddle zero, so coupling is established only for the noisiest
+spectra and not statistically established at SNR50/200. Within regret is the low side of
+the contrast (2–3× below full). → **PARTIALLY CONFIRMED** (real positive coupling at SNR15;
+positive-but-not-established at higher SNR).
+
+**Sub-claim 3 — within-set correlation positive but weak:** Predicted small positive
+within-set ρ. The established within-set ρ's are +0.08 to +0.09 — positive and genuinely
+tiny, exactly as predicted; at SNR50/200 the effect is even weaker (positive but not
+established). → **CONFIRMED** (if anything, weaker than predicted at higher SNR).
+
+**Sub-claim 4 — weakest for messy spectra (hydrogenated SWCNTs, rGO):** This suite has a
+single material_class (synthetic_disordered_carbon) and no material-class axis, so the
+prediction as written is UNTESTABLE here. Using SNR as a noise/messiness proxy, within-set
+coupling was *strongest* (and only established) at the noisiest SNR15 and washed out at the
+cleanest SNR200 — the opposite direction. → **UNTESTABLE AS WRITTEN; REFUTED VIA SNR PROXY.**
+Flagged for future work with a multi-material suite.
+
+**Overall verdict: PARTIALLY CONFIRMED.** The central structural prediction — accuracy
+decoupled across peak sets, coupled within a fixed set — broadly held: the full grid is
+near-decoupled with 2–3× higher regret, and within-set correlation is positive with lower
+regret. But the within-set coupling is statistically established only for the noisiest
+(SNR15) spectra, and the specific claim that messy spectra would show the weakest coupling
+was untestable as written and ran backwards under an SNR proxy.
+
+**Mechanism:** Day-6 established peak set as the dominant accuracy driver (DG configs ~5×
+more accurate than band-heavy sets). Within a fixed peak set, only baseline/lineshape/
+intensity vary, and these move accuracy little — leaving a small accuracy signal for fit
+quality to track (the weak positive within-set ρ). Across peak sets, the selector can swing
+between DG and overfitting band-heavy sets, producing the high full-grid regret.
+
+**Headline result:** The practically important finding is not in ρ but in T6b: the typical
+configuration's nominal 95% interval contains the truth only 18–28% of the time across SNR
+regimes — reported error bars are not honest 95% intervals under realistic misspecification
+(the expected FM4 outcome, elevated to a headline).
+
+**Scope:** Holds on the spectra, configurations, and SNR regimes of the synthetic
+disordered-carbon suite tested here.
+
+— Avin Gupta, 2026-06-22
+
+## Day 7 - 2026-06-22
+The deeper point is that goodness-of-fit is not a usable accuracy selector on hostile spectra — its apparent signal is almost entirely the peak-set decision, which AIC/BIC's complexity penalty handles only coarsely. The practical advice the protocol should carry is therefore don't trust fit statistics to pick your analysis, and the citable result is the undercoverage, not the selectors. The CX-4 catch is also worth keeping: a filter that looked correct in my read (uniform across selectors) was incomplete (wrong columns), and the independent audit caught what I skimmed — exactly why the two-pass design exists.

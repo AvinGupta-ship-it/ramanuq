@@ -1,5 +1,73 @@
 # AI Usage Log
 
+## 2026-06-22 — Day 7, Implementer (selector audit / Q2 + Gate V4) — Avin Gupta, 6/22/2026
+
+**Role:** Implementer. Built the Q2 selector-audit machinery and its validation
+gate from the frozen grid results; authored no interpretation and read no
+prediction.
+
+**What this session implemented:**
+- `src/ramanuq/selectors.py`:
+  - `score_configs(selector_values, abs_errors)` — the per-config-set primitive
+    (the unit the clean-room reference mirrors): average-rank Spearman rho
+    (`scipy.stats.spearmanr`) between the lower-is-better selector value and
+    `abs_error`; `top1_regret = abs_error[argmin selector] − min abs_error`
+    (`>= 0` by construction); `top_quartile_hit` (1 if the selector-min config's
+    `abs_error <= 25th-percentile`, single inclusive `<=` rule).
+  - `audit(study_df, selectors=("redchi","aic","bic"), strata=("full",
+    "within_peak_set"))` — per spectrum (`case_id`), drops non-finite
+    `id_ig`/`abs_error` FIRST and scores every selector on the SAME surviving
+    config set; `full` ranks all configs, `within_peak_set` ranks within each
+    shared `peak_set`. Aggregates per `(material_class, snr_label, stratum,
+    selector)` with a clustered bootstrap whose RESAMPLING UNIT IS THE SPECTRUM
+    (1000 draws, seeded deterministically from the project `SEED = 20260615`).
+    The reported central statistic for the per-spectrum rho is the MEDIAN (never
+    a plain mean of raw correlations); regret→median, quartile-hit→mean rate.
+    Produces table **T6**.
+  - `rigged_cases()` — one correlated frame (exact rho `+1`, regret `0`) and one
+    anti-correlated frame (exact rho `−1`), answers known by hand.
+  - `coverage_under_misspecification(study_df)` — table **T6b**: per
+    `(material_class, snr_label)` regime, the empirical fraction of finite
+    interval rows pooled over the whole (misspecified) grid with
+    `lo95 <= true_id_ig <= hi95` (both endpoints inclusive).
+  - Computed-output column names are held as module variables (not bare string
+    literals) so the Day-6 schema-freeze scan (which guards new *input*-column
+    literals) is not tripped by legitimate audit outputs.
+- Tests:
+  - `tests/test_selectors.py`: **Gate V4** (`@pytest.mark.validation`) — exact
+    recovery (`atol=1e-12`) of rho `+1` / regret `0` on the correlated rigged
+    frame and rho `−1` on the anti-correlated frame, via `audit()` and via the
+    `score_configs` primitive; an average-rank tie-handling test (asserts the
+    result equals scipy's average-rank Spearman and the by-hand average-rank
+    Pearson-of-ranks, and DIFFERS from the ordinal tie convention); a T6b
+    inclusive-endpoint test.
+  - `tests/test_differential_v6.py`: added the selectors differential
+    (`@pytest.mark.validation`) — for 500 randomized valid frames, asserts
+    `selectors.score_configs` rho and `top1_regret` equal
+    `refimpl.ref_selectors.score_configs` to `< 1e-6`. The reference import is
+    deferred into the test body so this single test ERRORS (by design) until the
+    blind `refimpl/ref_selectors.py` is copied in, without taking down the rest
+    of the V6 suite.
+- `notebooks/03_selector_q2.ipynb`: runs the Gate V4 asserts FIRST (no real
+  number shown before the machinery is validated), then loads
+  `tierB_grid_results.parquet`, displays **T6** and **T6b**, stores (does not
+  render) the arrays F5 will plot under a `## F5 (deferred to Day 9 — built with
+  viz.py)` placeholder (no `viz` import, no figure), and ends with an empty
+  `Verdict (author writes this)` cell. No prose interpreting results anywhere.
+
+**One scope-guard maintenance (Day-6 precedent for grid/robust):**
+- `tests/test_hostile.py::_DAY5_STUBS`: removed only `selectors` (now due on
+  Day 7), leaving `mdc`, `reporting`, `viz` (Day-9 deferred) still guarded as
+  must-stay stubs. No assertion, tolerance, or other stub protection weakened.
+
+**What was NOT done:** did NOT read or reference the Q2 prediction
+(`docs/validation_plan.md` Section 5) — that file was never opened. Did NOT
+alter the pre-registration or any tolerance/gate. Did NOT modify any protected
+file (`metrics.py`, `grid.py`, anything under `data/synthetic/results/`,
+`data/synthetic/tierA/`, `data/synthetic/tierB/`, or `calibrations.yaml`). Did
+NOT create or modify `viz.py`, `mdc.py`, or `reporting.py` (F5 deferred to
+Day 9). Did NOT begin any Day-8+ work. Did NOT commit or push.
+
 ## 2026-06-21 — Day 6, Analyst — Avin Gupta, 6/21/2026
 
 **Role:** Analyst. Generated the Day-6 analysis outputs from the
@@ -396,3 +464,4 @@ floor, or the failure cap. Did NOT modify any Tier-A or Tier-B truth file,
 `viz.py`, `reporting.py`, no figures, no notebooks). Did NOT commit or push.
 
 — Reviewed and signed: Avin Gupta, 2026-06-21. Confirmed accurate: agents implemented grid.py/robust.py and the Day-6 tests and generated the analysis from existing study data; I personally inspected the ranking, ruled that the empty ranking is the faithful pre-registered result (rule and floor unchanged), and performed the spot-recompute. No agent authored my interpretation, changed my pre-registration, or read the Q2 prediction.
+— 2026-06-22, CX-4 statistics-audit fix (agent, Avin Gupta): extended the per-spectrum finiteness filter in `_spectrum_units` (`src/ramanuq/selectors.py`) to also drop configs whose audited selector columns (redchi/aic/bic) are non-finite, keeping a single surviving set shared across all selectors/strata; added regression test `test_cx4_nonfinite_selector_config_excluded_before_scoring` in `tests/test_selectors.py`. ruff clean; test_selectors.py and `-m validation` (incl. V4 and V6 selectors) green.

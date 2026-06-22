@@ -312,6 +312,38 @@ def test_calibrated_metrics_match_reference():
         )
 
 
+# --------------------------------------------------------------------------- #
+# Selector differential (Gate V6 extension): ramanuq.selectors vs ref_selectors.
+#
+# NOTE: ``refimpl/ref_selectors.py`` is authored by a SEPARATE blind session and
+# copied in afterward. Until that file exists this test ERRORS on import (by
+# design). The import is deferred into the test body so the error is isolated to
+# this single test and does not take down the rest of the V6 differential suite.
+# --------------------------------------------------------------------------- #
+@pytest.mark.validation
+def test_selectors_match_reference():
+    """score_configs rho and top1_regret agree with the clean-room reference."""
+    from ramanuq.selectors import score_configs
+    from refimpl.ref_selectors import score_configs as ref_score_configs
+
+    rng = np.random.default_rng(SEED + 20)
+    for _ in range(N_CASES):
+        n = int(rng.integers(4, 97))  # 4..96 configurations
+        # Continuous draws -> no ties: argmin and rank order are unambiguous.
+        selector_values = rng.uniform(-50.0, 50.0, size=n)
+        abs_errors = rng.uniform(0.0, 5.0, size=n)
+
+        got = score_configs(selector_values, abs_errors)
+        ref = ref_score_configs(selector_values, abs_errors)
+
+        np.testing.assert_allclose(
+            got.rho, ref.rho, rtol=RTOL_NUMERIC, atol=1e-12
+        )
+        np.testing.assert_allclose(
+            got.top1_regret, ref.top1_regret, rtol=RTOL_NUMERIC, atol=1e-12
+        )
+
+
 @pytest.mark.validation
 def test_stage_guard_matches_reference():
     """Stage-2 guard decision + reason set agree exactly.

@@ -307,7 +307,7 @@ def test_tierA_untouched_by_tierB_suite(tmp_path):
     assert before == after, "Tier-A contents changed while building Tier-B"
 
 
-_DAY5_STUBS = ["mdc", "reporting", "selectors", "viz"]
+_DAY5_STUBS = ["mdc", "reporting", "viz"]
 
 
 def test_no_day5_scope_added():
