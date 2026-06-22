@@ -1,0 +1,287 @@
+{
+  "n_rows": 8640,
+  "n_valid_error": 6480,
+  "ranking_eligible_count": 0,
+  "ranking_is_empty": true,
+  "max_empirical_coverage": 0.8,
+  "coverage_floor": 0.9,
+  "headline": "No configuration is rank-eligible: max empirical 95% coverage 0.80 < 0.9 floor in every SNR regime. T5 and T9 are empty. Bootstrap statistical intervals undercover on hostile spectra.",
+  "rmse_order_leaders_per_snr_NOT_eligible": {
+    "15": [
+      {
+        "baseline": "poly5",
+        "lineshape": "gaussian",
+        "bwf_g": false,
+        "peak_set": "DG",
+        "intensity": "area",
+        "rmse": 0.13313863606606088,
+        "coverage": 0.4666666666666667,
+        "failure_rate": 0.0,
+        "eligible": false
+      },
+      {
+        "baseline": "poly5",
+        "lineshape": "pseudo_voigt",
+        "bwf_g": false,
+        "peak_set": "DG",
+        "intensity": "area",
+        "rmse": 0.13313938634723405,
+        "coverage": 0.4666666666666667,
+        "failure_rate": 0.0,
+        "eligible": false
+      },
+      {
+        "baseline": "poly5",
+        "lineshape": "lorentzian",
+        "bwf_g": false,
+        "peak_set": "DG",
+        "intensity": "area",
+        "rmse": 0.17040239438117294,
+        "coverage": 0.5333333333333333,
+        "failure_rate": 0.0,
+        "eligible": false
+      }
+    ],
+    "50": [
+      {
+        "baseline": "als",
+        "lineshape": "pseudo_voigt",
+        "bwf_g": false,
+        "peak_set": "DG",
+        "intensity": "area",
+        "rmse": 0.10921972265235329,
+        "coverage": 0.23333333333333334,
+        "failure_rate": 0.0,
+        "eligible": false
+      },
+      {
+        "baseline": "als",
+        "lineshape": "gaussian",
+        "bwf_g": false,
+        "peak_set": "DG",
+        "intensity": "area",
+        "rmse": 0.12415560214852463,
+        "coverage": 0.2,
+        "failure_rate": 0.0,
+        "eligible": false
+      },
+      {
+        "baseline": "poly5",
+        "lineshape": "gaussian",
+        "bwf_g": false,
+        "peak_set": "DG",
+        "intensity": "area",
+        "rmse": 0.13449430861208392,
+        "coverage": 0.36666666666666664,
+        "failure_rate": 0.0,
+        "eligible": false
+      }
+    ],
+    "200": [
+      {
+        "baseline": "als",
+        "lineshape": "pseudo_voigt",
+        "bwf_g": false,
+        "peak_set": "DG",
+        "intensity": "area",
+        "rmse": 0.14105264843332666,
+        "coverage": 0.2,
+        "failure_rate": 0.0,
+        "eligible": false
+      },
+      {
+        "baseline": "poly5",
+        "lineshape": "pseudo_voigt",
+        "bwf_g": false,
+        "peak_set": "DG",
+        "intensity": "area",
+        "rmse": 0.17612807554645507,
+        "coverage": 0.23333333333333334,
+        "failure_rate": 0.0,
+        "eligible": false
+      },
+      {
+        "baseline": "poly5",
+        "lineshape": "gaussian",
+        "bwf_g": false,
+        "peak_set": "DG",
+        "intensity": "area",
+        "rmse": 0.1773064962177862,
+        "coverage": 0.23333333333333334,
+        "failure_rate": 0.0,
+        "eligible": false
+      }
+    ]
+  },
+  "descriptive_decomposition": {
+    "label": "DESCRIPTIVE spread summary (non-causal, not ANOVA)",
+    "sigma_meth": 1.2498240656128592,
+    "id_ig_sd": 1.4217669336561674,
+    "range": [
+      -1.065624566149125,
+      34.50365376149131
+    ],
+    "per_factor": {
+      "baseline": {
+        "als": 0.9312198015739345,
+        "linear": 0.8756508914173374,
+        "poly3": 0.793596706873439,
+        "poly5": 0.662305151382626
+      },
+      "lineshape": {
+        "gaussian": 0.8373686681910055,
+        "lorentzian": 0.7639356015258565,
+        "pseudo_voigt": 0.8457751437186406
+      },
+      "bwf_g": {
+        "False": 0.8156931378118342,
+        "True": NaN
+      },
+      "peak_set": {
+        "DG": 0.2094604041057127,
+        "DGDp": 1.152056924014732,
+        "DGDpD3D4": 1.0855620853150578
+      },
+      "intensity": {
+        "area": 0.8714103945317558,
+        "height": 0.7599758810919126
+      }
+    }
+  },
+  "q1b_stability": {
+    "n_recommended_configs": 0,
+    "note": "Q1b is vacuous: with no rank-eligible config there is no protocol-recommended configuration to jackknife. T9 empty."
+  },
+  "gate_v3": {
+    "slice": "stage1 / SNR50",
+    "n_classes": 72,
+    "n_classes_below_5pct": 9,
+    "pass": true,
+    "best_class_mean_abs_bias": 0.005244204470775101,
+    "classes_below_5pct": [
+      {
+        "lineshape": "pseudo_voigt",
+        "baseline": "poly5",
+        "peak_set": "DG",
+        "intensity": "area",
+        "mean_abs_bias": 0.005244204470775101
+      },
+      {
+        "lineshape": "gaussian",
+        "baseline": "poly5",
+        "peak_set": "DG",
+        "intensity": "area",
+        "mean_abs_bias": 0.005246830725966664
+      },
+      {
+        "lineshape": "lorentzian",
+        "baseline": "linear",
+        "peak_set": "DG",
+        "intensity": "area",
+        "mean_abs_bias": 0.006098489112935608
+      },
+      {
+        "lineshape": "lorentzian",
+        "baseline": "poly5",
+        "peak_set": "DG",
+        "intensity": "area",
+        "mean_abs_bias": 0.010161336705252426
+      },
+      {
+        "lineshape": "pseudo_voigt",
+        "baseline": "poly3",
+        "peak_set": "DG",
+        "intensity": "area",
+        "mean_abs_bias": 0.013884307492749316
+      },
+      {
+        "lineshape": "gaussian",
+        "baseline": "poly3",
+        "peak_set": "DG",
+        "intensity": "area",
+        "mean_abs_bias": 0.013885202667850783
+      },
+      {
+        "lineshape": "lorentzian",
+        "baseline": "poly3",
+        "peak_set": "DG",
+        "intensity": "area",
+        "mean_abs_bias": 0.017530487382489093
+      },
+      {
+        "lineshape": "gaussian",
+        "baseline": "linear",
+        "peak_set": "DG",
+        "intensity": "area",
+        "mean_abs_bias": 0.02856473681320443
+      },
+      {
+        "lineshape": "pseudo_voigt",
+        "baseline": "linear",
+        "peak_set": "DG",
+        "intensity": "area",
+        "mean_abs_bias": 0.028579336049952657
+      }
+    ]
+  },
+  "severity_spread": {
+    "none": {
+      "sigma_meth": 1.0055289951732127,
+      "rmse": 1.1965565015009583,
+      "sigma_over_rmse": 0.8403522891830674,
+      "n_valid": 2160
+    },
+    "mild": {
+      "sigma_meth": 1.1950337404290694,
+      "rmse": 1.3794852052560909,
+      "sigma_over_rmse": 0.8662896389724024,
+      "n_valid": 2160
+    },
+    "strong": {
+      "sigma_meth": 1.4961182951338723,
+      "rmse": 1.685843104075838,
+      "sigma_over_rmse": 0.8874599845719505,
+      "n_valid": 2160
+    }
+  },
+  "failure_rate_by_peakset": {
+    "DG": {
+      "n_rows": 2880,
+      "n_failed": 720,
+      "failure_rate": 0.25,
+      "contains_Dprime": false
+    },
+    "DGDp": {
+      "n_rows": 2880,
+      "n_failed": 720,
+      "failure_rate": 0.25,
+      "contains_Dprime": true
+    },
+    "DGDpD3D4": {
+      "n_rows": 2880,
+      "n_failed": 720,
+      "failure_rate": 0.25,
+      "contains_Dprime": true
+    }
+  },
+  "spot_recompute_offer": {
+    "config": {
+      "baseline": "als",
+      "lineshape": "pseudo_voigt",
+      "bwf_g": false,
+      "peak_set": "DG",
+      "intensity": "area"
+    },
+    "config_note": "best-by-RMSE in its regime; NOT rank-eligible (coverage 0.233 < 0.90 floor)",
+    "regime_snr_label": 50,
+    "case_id": "tierB_stage1_blmild_snr50_i3",
+    "stage_label": "stage1",
+    "snr_label": 50,
+    "severity": "mild",
+    "instance": 3,
+    "id_ig": 0.9985999978590232,
+    "true_id_ig": 0.9880759703742558,
+    "error": 0.01052402748476744,
+    "abs_error": 0.01052402748476744
+  }
+}

@@ -1,5 +1,55 @@
 # AI Usage Log
 
+## 2026-06-21 — Day 6, Analyst — Avin Gupta, 6/21/2026
+
+**Role:** Analyst. Generated the Day-6 analysis outputs from the
+ALREADY-RUN Tier-B grid study. The study was NOT re-run; the existing
+`data/synthetic/results/tierB_grid_results.parquet` (8640 rows, 6480 valid
+errors) was loaded and the already-implemented `grid`/`robust` functions were
+called as-is.
+
+**What was generated (`scripts/day6_analysis.py`, a new analysis-only script):**
+- Q1 ranking (T5) via `grid.rank_configurations(df, 0.90, 0.05)`,
+  DESCRIPTIVE spread via `grid.decompose(df)`, and the Q1b stability table (T9)
+  via `robust.jackknife_ranking(df, 0.90, 0.05)`.
+- Table fragments `data/synthetic/results/t5_ranking.csv`,
+  `t9_stability.csv`, `v3_classes.csv`, `config_cell_accounting.csv`, and the
+  report fragments `day6_report_data.json`.
+- Plain-language briefing `docs/day6_briefing.md` and self-check
+  `docs/day6_quiz.md`.
+
+**Faithful headline finding:** under the pre-registered 0.90 coverage floor
+(== V1b lower bound), NO configuration is rank-eligible in any SNR regime —
+max empirical 95% coverage across all 288 (config × regime) cells is 0.80,
+below the floor. So `rank_configurations` (T5) and `jackknife_ranking` (T9)
+return EMPTY tables, and Q1b is vacuous (no recommended config to jackknife).
+This was verified to be the genuine study result (the bootstrap statistical
+intervals undercover on hostile non-Lorentzian spectra), not a misuse — the
+ranking rule and floors were used exactly as written and not modified. The
+RMSE-ordering leaders are recorded descriptively and clearly labelled NOT
+rank-eligible.
+
+**Gate V3 re-confirmed PASS** from the study data: on the stage1/SNR50 slice,
+9 of 72 (lineshape, baseline, peak_set, intensity) classes achieve mean
+absolute bias < 0.05 (best: pseudo_voigt·poly5·DG·area = 0.0052). V3 is a bias
+gate, independent of the coverage floor that empties the ranking.
+
+**Three pre-registered questions answered:** (a) spread sigma_meth/RMSE is
+larger on strong-baseline cases (0.887) than mild (0.866) or none (0.840);
+(b) +D′ strata are NOT flagged for failures — failure rate is identical (0.25)
+across all peak sets because failures come from `bwf_g=True`, not D′ (D′ does
+worsen error, not failures); (c) no rank-1 config exists, so rank stability is
+undefined, not "stable".
+
+**What was NOT done:** did NOT re-run the study (`run_study` untouched). Did
+NOT read the Q2 prediction — Section 5 / "Q2 Prediction (T1.6)" of
+`validation_plan.md` was never opened; only Sections 1–4 were read. Did NOT
+modify `grid.py`, `robust.py`, any test, `calibrations.yaml`, any `data/` file,
+any Tier-A/Tier-B truth JSON, `metrics.py`, or `fit.py`. Did NOT alter any
+pre-registration content, tolerance, the ranking rule, the coverage floor, or
+the failure cap. Did NOT begin any Day-7+ work (no `selectors.py`, `mdc.py`,
+`viz.py`, `reporting.py`, no figures). Did NOT commit or push.
+
 ## 2026-06-18 — Day 2, Implementer (Session A) — Avin Gupta, 6/18/2026
 
 **Role:** Implementer (Session A). Built the core analysis modules and their
@@ -294,3 +344,55 @@ other doc/pre-registration was edited. No science, data, or calibration constant
 was altered. No Day-6 work was begun (no grid.py, robust.py, or any new module).
 The finite-value guard that raises was left intact — the solver was fixed so it
 no longer produces non-finite values in the first place.
+
+### Day 6 — Session A (configuration-grid study + Q1b jackknife + Gate V3) — AG, 2026-06-20
+
+**Role:** Implementer (Session A). Executed the frozen Day 6 contract (prompts
+P6 then P7).
+
+**What was implemented:**
+- `src/ramanuq/grid.py`: frozen `RESULT_COLUMNS` schema; `default_grid()`
+  (factorial over baseline × lineshape × bwf_g × peak_set × intensity, with
+  `bwf_g=True` emitted only for `lineshape=="lorentzian"` — 96 configurations);
+  `run_grid()` (fit + `compute_metrics` with the matching intensity definition,
+  never raising on a failed fit); `run_study()` (Tier-B suite run, truth join on
+  `case_id` selecting the matched-definition truth, `error`/`abs_error`, writes
+  parquet + csv to `data/synthetic/results/`); `decompose()` (explicitly
+  DESCRIPTIVE / non-causal spread summary); `rank_configurations()` (Q1 ranking
+  rule — RMSE-ascending order with coverage-floor and failure-rate eligibility
+  gates read from the plan as named constants).
+- `src/ramanuq/robust.py`: `jackknife_ranking()` (Q1b leave-one-out over
+  configuration families and suite instances; per-regime top-quartile retention,
+  rank IQR, and flip flag for the protocol-recommended config).
+- Tests: `tests/test_grid.py` (grid build/constraint, exact-schema, ranking
+  eligibility, DESCRIPTIVE-label, **Gate V3** `@pytest.mark.validation` with
+  `V3_BIAS_TOL = 0.05` citing Section 1, and the RESULT_COLUMNS schema-freeze
+  scan of downstream modules); `tests/test_robust.py` (fabricated frames with
+  stability known by construction — one dominant config pinned to retention 1.0
+  / no flip, one near-tie pinned to a flip).
+
+**One clarification requested and granted (recorded for provenance):**
+- Gate V3 "mean absolute bias": confirmed the metric is `|mean signed error|`
+  (systematic offset), graded per intensity definition with class key
+  `(lineshape, baseline, peak_set, intensity)` — area-ratio and height-ratio
+  truths are distinct physical quantities and are not pooled. Tolerance (0.05),
+  slice (`stage1` & `snr50`), and class factors were read from the plan, not
+  invented.
+
+**One protected-test edit, explicitly authorized (recorded for provenance):**
+- `tests/test_hostile.py::test_no_day5_scope_added`: dropped `grid` and `robust`
+  from `_DAY5_STUBS` (leaving `mdc`, `reporting`, `selectors`, `viz`), mirroring
+  the earlier removal of `metrics`. The guard protects modules not yet due;
+  grid/robust are due on Day 6, so they legitimately come off. No other change to
+  that test; no tolerance, assertion, or remaining-stub protection was weakened.
+
+**What was NOT done:** did NOT read the Q2 prediction (Section 5 / T1.6 of
+`validation_plan.md` was never opened — only Sections 1–4 were read). Did NOT
+alter any pre-registration content, tolerance, the ranking rule, the coverage
+floor, or the failure cap. Did NOT modify any Tier-A or Tier-B truth file,
+`calibrations.yaml` or any `data/` input, `metrics.py`, `fit.py`,
+`lineshapes.py`, or any existing `src` module other than creating `grid.py` and
+`robust.py`. Did NOT begin any Day-7+ work (no `selectors.py`, `mdc.py`,
+`viz.py`, `reporting.py`, no figures, no notebooks). Did NOT commit or push.
+
+— Reviewed and signed: Avin Gupta, 2026-06-21. Confirmed accurate: agents implemented grid.py/robust.py and the Day-6 tests and generated the analysis from existing study data; I personally inspected the ranking, ruled that the empty ranking is the faithful pre-registered result (rule and floor unchanged), and performed the spot-recompute. No agent authored my interpretation, changed my pre-registration, or read the Q2 prediction.

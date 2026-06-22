@@ -43,6 +43,31 @@ Tier-1 L3 read complete, verdict Y. Found + fixed a latent area/height routing b
 classifier replaced with explicit intensity_kind field). Stage guard fires on stage-2 (G FWHM>40 cm^-1
 or D3/G>0.15), NaNs calibrated quantities + flag + warning, id_ig stays valid; no false-fire on stage-1. <commit:dd89103a2cae541d39b91e77f731724da1171eca>
 
+### Day 6 — measured results (Tier-B grid study, 2026-06-21)
+Study: 96 configs × 90 Tier-B spectra = 8640 rows, n_boot=40. Commit: <FILL AFTER COMMIT>.
+
+- **Gate V3 — measured: PASS.** stage1/SNR50 slice: 9 of 72 (lineshape,baseline,peak_set,intensity)
+  classes achieve mean |bias| < 0.05 (tolerance unchanged). All passing classes are DG/area.
+  Best: pseudo_voigt·poly5·DG·area, mean |bias| = 0.0052.
+- **Q1 ranking — EMPTY (the headline finding).** Under the pre-registered rule (RMSE ascending,
+  subject to coverage ≥ 0.90 and failure ≤ 0.05), NO configuration is rank-eligible in any SNR
+  regime. Maximum empirical 95% coverage across all 216 (config × SNR) cells is 0.80; zero cells
+  reach the 0.90 floor. This is the expected manifestation of FM4: statistical-only bootstrap
+  intervals undercover under out-of-family misspecification, so no standard configuration produces
+  honest 95% intervals on hostile data. The rule and floor were NOT changed to force a result.
+- **Q1b stability — vacuous.** With no rank-1 configuration in any regime, the jackknife has no
+  recommended config to test: 0 recommended configs, 0 flip flags, no retention/IQR. Rank stability
+  is undefined (not "stable").
+- **Failure rate — reported (FM1).** 25% of rows per peak set are non-finite id_ig, driven entirely
+  by bwf_g=True (BWF G-band yields NaN id_ig on non-Fano stage-1 spectra, by design) plus the
+  stage-2 stage-guarded rows. Not hidden; reported as data.
+- **Descriptive spread (NOT causal):** sigma_meth rises with baseline severity (none 1.01 → mild
+  1.20 → strong 1.50). DG peak set ~5× tighter in mean |error| than any D′-containing set. Marginals
+  are confounded by the factorial layout; not read as main effects.
+- **Spot-recompute (human, Avin):** verified row als·pseudo_voigt·DG·area on tierB_stage1_blmild_snr50_i3:
+  id_ig 0.99860, true_id_ig_area 0.98808 (area config correctly joined AREA truth, not height 2.031),
+  error +0.01052 = id_ig − true_id_ig. ✓
+
 ### Gate V1 — measured result (Day 3)
 - Pre-registered tolerance (UNCHANGED): < 0.1% relative recovery error, every stage-1 noise-free, baseline-free matched-recovery case (both area and height truth definitions).
 - Execution date: 2026-06-18
@@ -75,8 +100,24 @@ the true area and the true height are stored per spectrum.
 
 ## Section 3 — Q1 Ranking Rule and Q1b Jackknife
 
-- **Q1 ranking rule:** [ranking rule to be specified]
-- **Q1b jackknife:** [jackknife procedure to be specified]
+- **Q1 ranking rule:** Within each (material class, SNR regime), configurations
+  are ranked by **RMSE of I_D/I_G error against truth, ascending** (lowest RMSE =
+  best). A configuration is **rank-eligible only if** its empirical 95% coverage
+  is **≥ 0.90** (the V1b lower bound) **and** its failure rate is **≤ 5%**.
+  Configurations failing either floor are excluded from the ranking, not ranked
+  last. RMSE is the ordering metric; coverage and failure are eligibility gates.
+  (Coverage floor 0.90 chosen to match the pre-registered V1b coverage band
+  0.90–0.98, so the same honesty bound governs rank-eligibility.)
+- **Q1b jackknife:** The per-regime ranking is recomputed under leave-one-out
+  jackknife over two unit types: **(a) configuration families** — drop each
+  baseline class, each lineshape, and each peak set in turn — and **(b) suite
+  instances** — drop each random instance within a cell in turn. For the
+  protocol-recommended configuration, report per regime: **top-quartile retention
+  frequency** (fraction of resamples in which it remains in the top quartile),
+  **rank IQR** (interquartile range of its rank across resamples), and a **flip
+  flag** for any regime where the recommendation changes. Allowed claim form: the
+  recommended config was rank-stable in regimes where it stayed top-quartile in
+  ≥ N% of resamples, and unstable (flagged) elsewhere.
 
 ## Section 4 — Q2 Metrics
 
