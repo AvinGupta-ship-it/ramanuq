@@ -44,7 +44,7 @@ classifier replaced with explicit intensity_kind field). Stage guard fires on st
 or D3/G>0.15), NaNs calibrated quantities + flag + warning, id_ig stays valid; no false-fire on stage-1. <commit:dd89103a2cae541d39b91e77f731724da1171eca>
 
 ### Day 6 — measured results (Tier-B grid study, 2026-06-21)
-Study: 96 configs × 90 Tier-B spectra = 8640 rows, n_boot=40. Commit: <FILL AFTER COMMIT>.
+Study: 96 configs × 90 Tier-B spectra = 8640 rows, n_boot=40. Commit: <Fd6cf19b>.
 
 - **Gate V3 — measured: PASS.** stage1/SNR50 slice: 9 of 72 (lineshape,baseline,peak_set,intensity)
   classes achieve mean |bias| < 0.05 (tolerance unchanged). All passing classes are DG/area.

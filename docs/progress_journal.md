@@ -80,6 +80,6 @@ Day 5: Built the metrics layer — the bridge from fitted I_D/I_G to L_a and n_D
 
 **What I verified:** Hand-checked als·pseudo_voigt·DG·area on tierB_stage1_blmild_snr50_i3. Confirmed the area config joined the area truth (0.988), not the height truth (2.031) — so the Day-5 intensity routing is working end-to-end in the study — and error = 0.99860 − 0.98808 = +0.01052 checks out. That row also makes the headline concrete: +1% error, but coverage 0.23. Accurate, dishonest.
 
-**What I learned / what surprised me:** I expected a ranking with a winner and some caveats. Getting no winner felt wrong until I understood why — and then it became the most interesting result of the project. Also surprised that the simplest configs (DG/area, fewest parameters) are both the most accurate and the least dishonest; adding D′/D3/D4 bands didn't help, it overfit (~5× worse error). Complexity hurt.
+**What I learned / what surprised me:** I expected a ranking with a winner and some caveats. Getting no winner felt wrong until I understood why — and then it became the most interesting result of the project. Also surprised that the simplest configs (DG/area, fewest parameters) are both the most accurate and the least dishonest; adding D′/D3/D4 bands didn't help, it overfit (~5× worse error). Complexity hurt. <commit: d6cf19?>
 
 **Next (Day 7):** Selector audit Q2. 
