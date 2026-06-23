@@ -307,11 +307,14 @@ def test_tierA_untouched_by_tierB_suite(tmp_path):
     assert before == after, "Tier-A contents changed while building Tier-B"
 
 
-_DAY5_STUBS = ["mdc", "reporting", "viz"]
+# ``mdc`` was a stub through Day 7 and is implemented on Day 8 (P9 / Sec 9.8);
+# it is therefore no longer guarded here. ``reporting`` and ``viz`` remain
+# Day-9+ stubs and must stay un-implemented.
+_DAY5_STUBS = ["reporting", "viz"]
 
 
 def test_no_day5_scope_added():
-    """The Day-5 module stubs remain stubs and hostile pulls in no Day-5 code."""
+    """The remaining future-day stubs stay stubs; hostile pulls in no such code."""
     for name in _DAY5_STUBS:
         text = (_SRC / f"{name}.py").read_text()
         assert "def " not in text and "class " not in text, (

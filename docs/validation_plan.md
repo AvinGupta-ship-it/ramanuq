@@ -50,6 +50,20 @@ refimpl/ref_selectors.py on ρ and top1_regret across randomized frames to <1e-6
 (tests/test_differential_v6.py::test_selectors_match_reference). Reference authored in
 an isolated sibling folder with no source present (provable blindness).
 
+### 2026-06-22 — Day 8 (MDC / Q3) results.
+Gate V6 extended to mdc: ref_mdc/mdc and ref_to_delta_nd/to_delta_nd agree
+  to <1e-9 on randomized inputs (CI). PASSED.
+Hand-pin #3: sigma_single=0.10, alpha=0.05, power=0.8, n_rep=1 -> MDC=0.396203
+  in I_D/I_G; code reproduces it (test_hand_pin_mdc_idig PASSED).
+T7 MDC (naive [linear/lorentzian/DG/height] vs protocol [smallest-error-sd DG/area]):
+  SNR15:  naive 0.745  protocol 0.529  (Delta_nD central 1.19e11 cm^-2)  [poly5/gaussian]
+  SNR50:  naive 0.763  protocol 0.271  (Delta_nD central 6.08e10 cm^-2)  [als/pseudo_voigt]
+  SNR200: naive 0.703  protocol 0.565  (Delta_nD central 1.27e11 cm^-2)  [als/pseudo_voigt]
+  Naive requires ~1.4x / 2.8x / 1.2x larger change to detect, by regime.
+Protocol recommendations authored same date in protocol.md; grounded in measured
+  accuracy ranking + honest-coverage finding (no config reached 0.90 floor; max 0.467).
+CX-1 review of mdc.py: 0 blockers / 1 deferred NIT (unused schema tuples).
+
 ### Day 6 — measured results (Tier-B grid study, 2026-06-21)
 Study: 96 configs × 90 Tier-B spectra = 8640 rows, n_boot=40. Commit: <Fd6cf19b>.
 
@@ -229,3 +243,4 @@ regimes — reported error bars are not honest 95% intervals under realistic mis
 disordered-carbon suite tested here.
 
 — Avin Gupta, 2026-06-22
+

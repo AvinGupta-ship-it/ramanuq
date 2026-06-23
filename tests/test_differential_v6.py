@@ -20,6 +20,7 @@ import pytest
 from ramanuq.lineshapes import lorentzian, gaussian, pseudo_voigt, bwf
 from ramanuq.fit import aic, bic
 from ramanuq.metrics import load_calibrations, compute_metrics
+from ramanuq.mdc import mdc as pkg_mdc, to_delta_nd as pkg_to_delta_nd
 
 # Clean-room references.
 from refimpl.ref_lineshapes import (
@@ -386,3 +387,66 @@ def test_stage_guard_matches_reference():
 
         assert pkg_triggered == ref_triggered
         assert pkg_reasons == set(ref_reasons)
+
+
+# --------------------------------------------------------------------------- #
+# MDC differential (Gate V6 extension): ramanuq.mdc vs ref_mdc.
+#
+# NOTE: ``refimpl/ref_mdc.py`` is authored by a SEPARATE blind session and copied
+# in afterward. Until it exposes ``ref_mdc`` and ``ref_to_delta_nd`` these tests
+# SKIP gracefully (importorskip on the module + an attribute guard), so the suite
+# stays green. Once the reference lands they assert agreement to RTOL_ANALYTIC.
+# --------------------------------------------------------------------------- #
+def _ref_mdc_funcs():
+    """Return (ref_mdc, ref_to_delta_nd) or skip if the reference is absent."""
+    ref_mod = pytest.importorskip("refimpl.ref_mdc")
+    ref_mdc = getattr(ref_mod, "ref_mdc", None)
+    ref_to_delta_nd = getattr(ref_mod, "ref_to_delta_nd", None)
+    if ref_mdc is None or ref_to_delta_nd is None:
+        pytest.skip(
+            "refimpl.ref_mdc not yet authored "
+            "(ref_mdc/ref_to_delta_nd absent)"
+        )
+    return ref_mdc, ref_to_delta_nd
+
+
+@pytest.mark.validation
+def test_mdc_matches_reference():
+    """mdc(sigma, alpha, power, n_rep) agrees with ref_mdc (RTOL_ANALYTIC)."""
+    ref_mdc, _ = _ref_mdc_funcs()
+    rng = np.random.default_rng(SEED + 30)
+    for _ in range(N_CASES):
+        sigma = rng.uniform(1e-3, 5.0)
+        alpha = rng.uniform(0.001, 0.20)
+        power = rng.uniform(0.50, 0.999)
+        n_rep = int(rng.integers(1, 20))
+        got = pkg_mdc(sigma, alpha=alpha, power=power, n_rep=n_rep)
+        ref = ref_mdc(sigma, alpha=alpha, power=power, n_rep=n_rep)
+        np.testing.assert_allclose(got, ref, rtol=RTOL_ANALYTIC, atol=0.0)
+
+
+@pytest.mark.validation
+def test_to_delta_nd_matches_reference():
+    """Delta-n_D propagation agrees: src reads calibrations, ref gets the triple.
+
+    Both sides see the SAME Cancado-2011 constant/uncertainty (one YAML file).
+    The src function derives ``C_central/C_lo/C_hi = (const +/- unc) / lambda^4``
+    internally from the calibrations object; the reference is fed that exact
+    triple, extracted here from the same loaded calibrations.
+    """
+    ref_mdc, ref_to_delta_nd = _ref_mdc_funcs()
+    const = _PKG_CALS["cancado_2011"]["constant_value"]
+    unc = _PKG_CALS["cancado_2011"]["constant_uncertainty"]
+
+    rng = np.random.default_rng(SEED + 31)
+    for _ in range(N_CASES):
+        mdc_value = rng.uniform(1e-4, 2.0)
+        lam = rng.uniform(450.0, 650.0)  # visible excitation
+        lam4 = lam ** 4
+        c_central = const / lam4
+        c_lo = (const - unc) / lam4
+        c_hi = (const + unc) / lam4
+
+        got = pkg_to_delta_nd(mdc_value, _PKG_CALS, lam)
+        ref = ref_to_delta_nd(mdc_value, c_central, c_lo, c_hi)
+        np.testing.assert_allclose(got, ref, rtol=RTOL_ANALYTIC, atol=0.0)

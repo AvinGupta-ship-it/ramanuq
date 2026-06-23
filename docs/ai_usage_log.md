@@ -465,3 +465,61 @@ floor, or the failure cap. Did NOT modify any Tier-A or Tier-B truth file,
 
 — Reviewed and signed: Avin Gupta, 2026-06-21. Confirmed accurate: agents implemented grid.py/robust.py and the Day-6 tests and generated the analysis from existing study data; I personally inspected the ranking, ruled that the empty ranking is the faithful pre-registered result (rule and floor unchanged), and performed the spot-recompute. No agent authored my interpretation, changed my pre-registration, or read the Q2 prediction.
 — 2026-06-22, CX-4 statistics-audit fix (agent, Avin Gupta): extended the per-spectrum finiteness filter in `_spectrum_units` (`src/ramanuq/selectors.py`) to also drop configs whose audited selector columns (redchi/aic/bic) are non-finite, keeping a single surviving set shared across all selectors/strata; added regression test `test_cx4_nonfinite_selector_config_excluded_before_scoring` in `tests/test_selectors.py`. ruff clean; test_selectors.py and `-m validation` (incl. V4 and V6 selectors) green.
+
+---
+
+## Day 8 — MDC / Q3 + protocol-card scaffold (agent session, 2026-06-22)
+
+**What this session implemented: Reviewed and signed — Avin Gupta, 2026-06-22.**
+- `src/ramanuq/mdc.py`: `mdc(sigma_single, alpha=0.05, power=0.8, n_rep=1)` =
+  `(norm.ppf(1-alpha/2) + norm.ppf(power)) * sqrt(2) * sigma_single / sqrt(n_rep)`;
+  `to_delta_nd(mdc_value, calibrations, wavelength_nm)` returning the
+  `(central, lo, hi)` Δn_D triple via the multiplicative Cancado-2011 relation
+  `C(λ) = constant_value / λ⁴` with the `± published constant_uncertainty` band
+  (constant and uncertainty READ from the loaded calibrations object — no
+  hard-coded calibration number; raises if the uncertainty field is absent);
+  `estimate_sigma_single` (sd ddof=1 of the signed `error` column — precision)
+  and `estimate_bias` (mean of the signed `error` column — accuracy, reported
+  SEPARATELY) over a (config, regime=material_class+snr_label) filter.
+- `tests/test_mdc.py`: hand-pin #3 placeholder (`HAND_PIN_SIGMA = 0.10`,
+  `HAND_PIN_MDC_IDIG = None`) that `pytest.skip`s while the value is None (NOT a
+  validation gate); a 1/√n_rep scaling test; and std-vs-mean tests for the two
+  estimators on a fabricated frame with known values.
+- `notebooks/04_mdc_casestudy_q3.ipynb`: loads the Tier-B parquet; per SNR
+  regime computes σ_single, bias, and MDC (I_D/I_G and Δn_D) for the NAIVE
+  config (linear|lorentzian|bwf_g=False|DG|height) and the PROTOCOL config (the
+  DG/area config with the smallest signed-error sd in that regime, with the
+  selection and reason printed); plots MDC-vs-SNR (naive vs protocol) in both
+  currencies in PLAIN inline matplotlib (no viz.py); prints the summary table.
+  No interpretive prose.
+- `docs/protocol.md`: measured-cells-only table (regime | recommended | bias |
+  RMSE | coverage | failure | MDC | stability), one row per SNR regime, with the
+  empty author section heading left for the human.
+- `tests/test_differential_v6.py`: Gate-V6 MDC differential
+  (`test_mdc_matches_reference`, `test_to_delta_nd_matches_reference`,
+  `@pytest.mark.validation`) asserting `mdc`/`to_delta_nd` equal
+  `refimpl.ref_mdc` on randomized inputs to rtol 1e-9; written to
+  `pytest.importorskip` the reference module and skip gracefully while
+  `ref_mdc`/`ref_to_delta_nd` are absent (reference authored separately/blind).
+
+**One stale stub-guard narrowed (recorded for provenance):**
+- `tests/test_hostile.py::test_no_day5_scope_added`: dropped `mdc` from
+  `_DAY5_STUBS` (leaving `reporting`, `viz`), because Day 8 (P9 / §9.8)
+  legitimately implements `mdc.py`. The guard still enforces that `reporting`
+  and `viz` remain stubs and that `hostile.py` imports neither. No tolerance,
+  assertion, or remaining-stub protection was weakened; this test is not a
+  `@pytest.mark.validation` gate.
+
+**Gate results this session:** ruff clean; `tests/test_mdc.py` 3 passed / 1
+skipped (hand-pin); `-m validation` 34 passed / 2 skipped (the two new MDC
+differentials, awaiting ref_mdc); full suite 784 passed / 3 skipped.
+
+**What was NOT done:** did NOT author any protocol recommendation prose (the
+`## Recommendations and scope` section is empty for the human). Did NOT compute
+or fill the hand-pin value (`HAND_PIN_MDC_IDIG` stays `None`; the test SKIPS).
+Did NOT change any tolerance, the pre-registration, the ranking rule, the
+coverage floor, or the failure cap. Did NOT edit `validation_plan.md`,
+`progress_journal.md`, or `calibrations.yaml` science. Did NOT modify any
+Tier-A/Tier-B truth file or the study results parquet/csv. Did NOT author
+`refimpl/ref_mdc.py` (kept blind). Did NOT build `viz.py`/`reporting.py` or any
+styled figure, and did NOT begin any Day-9 work. Did NOT commit or push.
