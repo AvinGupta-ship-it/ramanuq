@@ -1,0 +1,84 @@
+# RamanUQ v2.1 — digitized spectra provenance (DRAFT)
+# Extracted by point-extraction assistant from figure images in data/digitized/sources/.
+# Fields are a DRAFT for the user to confirm/fill. Fields prefixed "CONFIRM:" are the
+# assistant's best read of a scientific-judgment item and MUST be verified against the paper.
+# No smoothing/interpolation was applied; each CSV is a per-image-column trace of the named curve.
+
+spectra:
+
+  - id: cancado2011_v5
+    citation: "Cançado, L. G.; Jorio, A.; Martins Ferreira, E. H.; Stavale, F.; Achete, C. A.; Capaz, R. B.; Moutinho, M. V. O.; Lombardo, A.; Kulmala, T. S.; Ferrari, A. C. 'Quantifying Defects in Graphene via Raman Spectroscopy at Different Excitation Energies.' Nano Lett. 2011, 11, 3190-3196."
+    doi: "10.1021/nl201432g"
+    figure_reference: "Figure 1, third-from-bottom spectrum (L_D = 7 nm; the curve labeled I_D/I_G = 1.6). With 5 stacked spectra ordered top->bottom 2,5,7,14,24 nm, the 7 nm trace is the middle one (3rd from top = 3rd from bottom)."
+    material: "single-layer graphene (SLG) with Ar+-bombardment-induced point defects (single and double vacancies); L_D = 7 nm member of the defect-density series"
+    excitation_nm: 514.5
+    stage: "stage 1 - explicitly stated by the paper (L_D=7 nm is listed among the stage-1 samples L_D = 24, 14, 13, 7, 5 nm; only L_D=2 nm reaches the onset of stage 2). On the I_D/I_G-vs-L_D curve this point is on the rising branch (I_D/I_G increases as L_D decreases toward the ~3 nm maximum), i.e. below the I_D/I_G turnover."
+    states_method: "yes - the paper explicitly defines I_D/I_G as the D-to-G peak INTENSITY (height) ratio, distinct from the integrated-area ratio A_D/A_G. It does not give a baseline/lineshape recipe here; the measurement procedure follows refs 28 (Lucchese 2010) and 29 (Martins Ferreira 2010)."
+    stated_method: "intensity=HEIGHT (peak-intensity ratio, explicitly distinguished from area ratio A_D/A_G); peak_set={D,G}; baseline and lineshape not specified in this paper (procedure per refs 28 and 29)"
+    published_id_ig: 1.6
+    intensity_definition_of_published_value: "peak HEIGHT (intensity) ratio at E_L=2.41 eV (514.5 nm); the paper defines I_D/I_G as the peak-intensity ratio, distinct from the integrated-area ratio A_D/A_G"
+    digitized_csv_path:
+      - "data/digitized/cancado2011_v5_digitization_a.csv"
+      - "data/digitized/cancado2011_v5_digitization_b.csv"
+    notes: >
+      Five stacked, same-color (green) spectra; extracted ONLY the third-from-bottom
+      (top->bottom order: L_D=2nm, 5nm, 7nm[TARGET], 14nm, 24nm), confirmed by 5 distinct
+      baseline segments at x=750 px. The target was isolated as its own connected curve
+      (it does not touch the neighbouring spectra). Two INDEPENDENT extractions are provided
+      for twice-verification: (a) scipy connected-component label + per-column mean row;
+      (b) own BFS flood-fill from a seed on the 3rd baseline + per-column midrange, with a
+      different green threshold. Both isolated the identical curve (pixel y-band 203-347).
+      X-axis: read from inward tick labels 1200,1600,2000,2400,2800,3200 cm^-1 (px 73..803);
+      data span used = 1200 to ~3400 cm^-1 (right frame). Y-axis: "Intensity (arb. units)",
+      NO numeric ticks, so intensity is reported as a frame-relative fraction = (y_bottom_axis - y_pixel)/
+      (frame height), 0 at bottom axis and 1 at top axis; this curve's baseline sits at ~0.43 in
+      that scale (vertical stack offset). Sanity check on extracted points: height
+      (I_D - baseline)/(I_G - baseline) ~ 1.71 (a) / 1.71 (b), vs published 1.6 - consistent given
+      arbitrary baseline; user to recompute with the paper's baseline definition - Twice-digitization confirmed: a=1.721, b=1.691, agree within 1.7%; height-ratio vs published 1.6 to be reconciled at Day-10 V5 with proper baseline.
+
+  - id: nrgo_arxiv1902
+    citation: "Rivera, L. M.; Betancur, A. F.; Zarate, D. G.; Torres Torres, D.; Hoyos, L. M.; García, A. G. 'Reduction and Simultaneous Doping of Graphene Oxide to Repel LDL in Treatment of Atherosclerosis Disease.' arXiv:1902.01850 (2019). Corresponding author: A. G. García (CIMAV, Mexico)."
+    doi: "arXiv:1902.01850"
+    figure_reference: "Figure 5, BLUE 'N-rGO' curve (lower trace; labeled D 1350, G 1599, 2D 2946, I_D/I_G=1.14). NOT the upper black GO curve (I_D/I_G=0.92)."
+    material: "nitrogen-doped reduced graphene oxide (N-rGO); ~9.57 at% N (predominantly pyrrolic N by XPS), few-layer (I_2D/I_G=0.33)"
+    excitation_nm: 532
+    stage: "not classified by the paper - Rivera et al. do not use the Ferrari/Cançado stage-1/stage-2 amorphization framework. The material is highly disordered reduced graphene oxide (I_D/I_G=1.14, comparable D and G); treat as high-defect rGO rather than assigning a Cançado stage."
+    states_method: "yes (type only) - the paper calls I_D/I_G the 'D-band and G-band peak intensities ratio', i.e. a HEIGHT ratio; no baseline or lineshape/fitting procedure is described."
+    stated_method: "intensity=HEIGHT (text: 'peak intensities ratio'); peak_set={D,G}; baseline and lineshape not specified in paper"
+    published_id_ig: 1.14
+    intensity_definition_of_published_value: "peak HEIGHT (intensity) ratio at 532 nm; the paper calls it the 'peak intensities ratio' (GO value 0.92, N-rGO value 1.14)"
+    digitized_csv_path:
+      - "data/digitized/nrgo_arxiv1902_fig5.csv"
+    notes: >
+      Extracted ONLY the blue N-rGO curve via color mask (B-R>50, B-G>50); the black GO curve
+      is vertically separated and was excluded. Blue text labels (D 1350, G 1599, 2D 2946,
+      ID/IG=1.14, N-rGO) sit ABOVE the trace and were excluded by taking the bottom-most blue
+      pixel per column. X-axis: read from bottom tick labels 500,1000,1500,2000,2500,3000,3500
+      cm^-1 (px 109..765); data span = 500 to 3500 cm^-1. Y-axis: "Intensity [a.u.]", NO numeric
+      ticks, so intensity is reported as a frame-relative fraction = (y_bottom_frame - y_pixel)/
+      (frame height), 0 at bottom frame and 1 at top frame. Sanity check: extracted height
+      (I_D - baseline)/(I_G - baseline) ~ 1.14, matching the printed I_D/I_G=1.14 (consistent with
+      a height-based published value).
+
+  - id: fcnt_arxiv1711
+    citation: "Maity, K. P.; Tanty, N.; Patra, A.; Prasad, V. 'Negative to Positive Magnetoresistance Transition in Functionalization of Carbon Nanotube and Polyaniline Composite.' arXiv:1711.01957 (2017). Indian Institute of Science, Bangalore."
+    doi: "arXiv:1711.01957"
+    figure_reference: "Figure 1(a), GREEN 'fCNT' curve (functionalized CNT; D 1348, G 1594, G' 2692 cm^-1 per text). NOT the purple/magenta 'CNT' curve (I_D/I_G=1.49). Per-peak fit shown in Fig. 1(c)."
+    material: "functionalized multi-walled carbon nanotubes (fCNT); acid-functionalized in conc. H2SO4:HNO3 3:1 for 24 h"
+    excitation_nm: 514.5
+    stage: "not classified by the paper - Maity et al. do not use the Ferrari/Cançado stage framework. Functionalization raises I_D/I_G from 1.49 (pristine CNT) to 1.64 (fCNT), indicating increased sidewall disorder/defect density; treat as disordered/defective MWCNT rather than assigning a Cançado stage."
+    states_method: "yes - the paper explicitly calls I_D/I_G the 'integrated ratio' (AREA-based), and Fig. 1(b,c) show fitted D and G bands with a cumulative-fit peak; the specific lineshape function is not named."
+    stated_method: "intensity=AREA (text: 'integrated ratio I_D/I_G'); peak_set={D,G}; D and G fitted individually (Fig. 1b,c: 'fit D band'/'fit G band'/'Cumulative Fit Peak'); lineshape not named; D-band FWHM 81.67 cm^-1 (CNT) -> 94.22 cm^-1 (fCNT)"
+    published_id_ig: 1.64
+    intensity_definition_of_published_value: "INTEGRATED AREA ratio at 514.5 nm (paper: 'integrated ratio I_D/I_G ... increased from 1.49 to 1.64' for CNT -> fCNT); this is NOT a height ratio, so a digitized height-based I_D/I_G (~1.4) is expected to be lower"
+    digitized_csv_path:
+      - "data/digitized/fcnt_arxiv1711_fig1a.csv"
+    notes: >
+      The green fCNT and purple CNT curves OVERLAP; extracted ONLY the green fCNT curve via
+      color mask (G-R>25, G-B>25). The green legend line + "fCNT" legend text (top-left,
+      px x<260 / y<95) were excluded; per-column centroid of the remaining green pixels was used.
+      X-axis: read from bottom tick labels 0,500,1000,...,3000 cm^-1 (major ticks px 117..578;
+      note leftmost labeled tick is 0); data span = ~95 to ~3008 cm^-1. Y-axis: "Intensity (a.u.)"
+      WITH numeric ticks 90,120,150,180,210; intensity is reported on that a.u. scale (linear
+      calibration to the labeled ticks). Extracted peaks: D ~1356, G ~1603, G' ~2700 cm^-1. The
+      published 1.64 is an AREA ratio (see field above).

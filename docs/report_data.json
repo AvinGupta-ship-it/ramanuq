@@ -1,0 +1,495 @@
+{
+  "_about": "RamanUQ v2.1 report data. Every number below is RECOMPUTED from data/synthetic/results/tierB_grid_results.parquet and the frozen calibrations; nothing is copied from protocol.md. Do not hand-edit.",
+  "gate_v3": {
+    "best_class": {
+      "baseline": "poly5",
+      "intensity": "area",
+      "lineshape": "pseudo_voigt",
+      "peak_set": "DG"
+    },
+    "best_class_mean_abs_bias": 0.005244204470775101,
+    "n_classes": 72,
+    "n_classes_passing": 9,
+    "pass": true,
+    "slice": "stage1 / SNR50"
+  },
+  "gates": {
+    "V1": {
+      "name": "Parameter recovery",
+      "note": "Recomputed gate state is read from the pre-registration record; V1 evidence lives in tests/test_fit_recovery.py.",
+      "source": "validation_plan.md Gate V1 (Day 3)",
+      "status": "PASS",
+      "tolerance": "< 0.1% relative recovery error"
+    },
+    "V1b": {
+      "name": "Empirical coverage band",
+      "note": "On the hostile grid NO config reaches the 0.90 floor (max empirical coverage across all cells = 0.80); reported as the honest-coverage finding, not forced to pass.",
+      "source": "validation_plan.md Gate V1b; T6b recompute",
+      "status": "REPORTED",
+      "tolerance": "0.90-0.98"
+    },
+    "V2": {
+      "name": "Baseline fit",
+      "source": "validation_plan.md Gate V2 (Day 4)",
+      "status": "PASS",
+      "tolerance": "< 2% of G-band height (in-class)"
+    },
+    "V3": {
+      "best_class": {
+        "baseline": "poly5",
+        "intensity": "area",
+        "lineshape": "pseudo_voigt",
+        "peak_set": "DG"
+      },
+      "best_class_mean_abs_bias": 0.005244204470775101,
+      "n_classes": 72,
+      "n_classes_passing": 9,
+      "name": "Hostile-spectrum bias",
+      "pass": true,
+      "passing_classes": [
+        {
+          "baseline": "poly5",
+          "intensity": "area",
+          "lineshape": "pseudo_voigt",
+          "mean_abs_bias": 0.005244204470775101,
+          "peak_set": "DG"
+        },
+        {
+          "baseline": "poly5",
+          "intensity": "area",
+          "lineshape": "gaussian",
+          "mean_abs_bias": 0.005246830725966664,
+          "peak_set": "DG"
+        },
+        {
+          "baseline": "linear",
+          "intensity": "area",
+          "lineshape": "lorentzian",
+          "mean_abs_bias": 0.006098489112935608,
+          "peak_set": "DG"
+        },
+        {
+          "baseline": "poly5",
+          "intensity": "area",
+          "lineshape": "lorentzian",
+          "mean_abs_bias": 0.010161336705252426,
+          "peak_set": "DG"
+        },
+        {
+          "baseline": "poly3",
+          "intensity": "area",
+          "lineshape": "pseudo_voigt",
+          "mean_abs_bias": 0.013884307492749316,
+          "peak_set": "DG"
+        },
+        {
+          "baseline": "poly3",
+          "intensity": "area",
+          "lineshape": "gaussian",
+          "mean_abs_bias": 0.013885202667850783,
+          "peak_set": "DG"
+        },
+        {
+          "baseline": "poly3",
+          "intensity": "area",
+          "lineshape": "lorentzian",
+          "mean_abs_bias": 0.017530487382489093,
+          "peak_set": "DG"
+        },
+        {
+          "baseline": "linear",
+          "intensity": "area",
+          "lineshape": "gaussian",
+          "mean_abs_bias": 0.02856473681320443,
+          "peak_set": "DG"
+        },
+        {
+          "baseline": "linear",
+          "intensity": "area",
+          "lineshape": "pseudo_voigt",
+          "mean_abs_bias": 0.028579336049952657,
+          "peak_set": "DG"
+        }
+      ],
+      "slice": "stage1 / SNR50",
+      "status": "PASS",
+      "tolerance_abs_bias": 0.05
+    },
+    "V4": {
+      "name": "Selector sanity (rigged exact recovery)",
+      "source": "validation_plan.md Gate V4 (Day 7)",
+      "status": "PASS",
+      "tolerance": "exact recovery (atol 1e-12)"
+    },
+    "V5": {
+      "name": "Published-spectrum reproduction",
+      "note": "No digitized spectrum present yet; F8 / V5 are deferred to Day 10.",
+      "source": "validation_plan.md Gate V5",
+      "status": "pending_day10",
+      "tolerance": "within +/-10% of >=1 digitized published spectrum"
+    },
+    "V6": {
+      "name": "Cross-implementation agreement",
+      "source": "validation_plan.md Gate V6 (metrics Day 5, selectors Day 7, mdc Day 8)",
+      "status": "PASS",
+      "tolerance": "1e-9 relative (analytic) / 1e-6 (numerical)"
+    }
+  },
+  "material_class": "synthetic_disordered_carbon",
+  "mdc": {
+    "alpha": 0.05,
+    "n_rep": 1,
+    "naive_config": "baseline=linear|lineshape=lorentzian|bwf_g=False|peak_set=DG|intensity=height",
+    "per_regime": {
+      "SNR15": {
+        "n_protocol_candidates": 12,
+        "n_spectra": 30,
+        "naive_bias": -0.17460531723347994,
+        "naive_delta_nd_central": 167307975663.5383,
+        "naive_delta_nd_range": [
+          120833537979.22212,
+          213782413347.85452
+        ],
+        "naive_mdc_idig": 0.744544515045996,
+        "naive_over_protocol_mdc_ratio": 1.4073035439658763,
+        "naive_sigma_single": 0.18791949360686705,
+        "protocol_bias": 0.022126105489381386,
+        "protocol_config": "baseline=poly5|lineshape=gaussian|bwf_g=False|peak_set=DG|intensity=area",
+        "protocol_config_factors": {
+          "baseline": "poly5",
+          "bwf_g": false,
+          "intensity": "area",
+          "lineshape": "gaussian",
+          "peak_set": "DG"
+        },
+        "protocol_coverage": 0.4666666666666667,
+        "protocol_delta_nd_central": 118885493027.36292,
+        "protocol_delta_nd_range": [
+          85861744964.20656,
+          151909241090.5193
+        ],
+        "protocol_failure_rate": 0.0,
+        "protocol_mdc_idig": 0.5290575144490998,
+        "protocol_rmse": 0.13313863606606088,
+        "protocol_sigma_single": 0.1335315997835813
+      },
+      "SNR200": {
+        "n_protocol_candidates": 12,
+        "n_spectra": 30,
+        "naive_bias": -0.16865420379332682,
+        "naive_delta_nd_central": 157971969501.99136,
+        "naive_delta_nd_range": [
+          114090866862.54933,
+          201853072141.43344
+        ],
+        "naive_mdc_idig": 0.7029979470928087,
+        "naive_over_protocol_mdc_ratio": 1.2445010271946284,
+        "naive_sigma_single": 0.17743333750324722,
+        "protocol_bias": -0.01568808437502994,
+        "protocol_config": "baseline=als|lineshape=pseudo_voigt|bwf_g=False|peak_set=DG|intensity=area",
+        "protocol_config_factors": {
+          "baseline": "als",
+          "bwf_g": false,
+          "intensity": "area",
+          "lineshape": "pseudo_voigt",
+          "peak_set": "DG"
+        },
+        "protocol_coverage": 0.2,
+        "protocol_delta_nd_central": 126935989645.66063,
+        "protocol_delta_nd_range": [
+          91675992521.86603,
+          162195986769.4553
+        ],
+        "protocol_failure_rate": 0.0,
+        "protocol_mdc_idig": 0.5648833803516551,
+        "protocol_rmse": 0.14105264843332666,
+        "protocol_sigma_single": 0.14257387790448026
+      },
+      "SNR50": {
+        "n_protocol_candidates": 12,
+        "n_spectra": 30,
+        "naive_bias": -0.21928599584283617,
+        "naive_delta_nd_central": 171428195206.47504,
+        "naive_delta_nd_range": [
+          123809252093.56532,
+          219047138319.3848
+        ],
+        "naive_mdc_idig": 0.7628800836243169,
+        "naive_over_protocol_mdc_ratio": 2.8187232259012935,
+        "naive_sigma_single": 0.1925473038889953,
+        "protocol_bias": -0.0861290809070363,
+        "protocol_config": "baseline=als|lineshape=pseudo_voigt|bwf_g=False|peak_set=DG|intensity=area",
+        "protocol_config_factors": {
+          "baseline": "als",
+          "bwf_g": false,
+          "intensity": "area",
+          "lineshape": "pseudo_voigt",
+          "peak_set": "DG"
+        },
+        "protocol_coverage": 0.23333333333333334,
+        "protocol_delta_nd_central": 60817675758.73309,
+        "protocol_delta_nd_range": [
+          43923876936.86279,
+          77711474580.60341
+        ],
+        "protocol_failure_rate": 0.0,
+        "protocol_mdc_idig": 0.27064738978775904,
+        "protocol_rmse": 0.10921972265235329,
+        "protocol_sigma_single": 0.06831011364282771
+      }
+    },
+    "power": 0.8,
+    "wavelength_nm": 532.0
+  },
+  "n_rows": 8640,
+  "parquet_path": "data/synthetic/results/tierB_grid_results.parquet",
+  "q1b_stability": {
+    "n_recommended_configs": 0,
+    "note": "Q1b is vacuous: with no rank-eligible config there is no protocol-recommended configuration to jackknife.",
+    "per_regime": {
+      "SNR15": "undefined; 0 rank-eligible configs",
+      "SNR200": "undefined; 0 rank-eligible configs",
+      "SNR50": "undefined; 0 rank-eligible configs"
+    }
+  },
+  "q2_audit": {
+    "by_stratum": {
+      "full": {
+        "SNR15": {
+          "aic": {
+            "n_spectra": 30,
+            "rho_ci": [
+              -0.09331275118400731,
+              0.02660909114683558
+            ],
+            "spearman_rho": -0.03821287432147559,
+            "top1_regret": 1.3749429051534574,
+            "top_quartile_hit": 0.06666666666666667
+          },
+          "bic": {
+            "n_spectra": 30,
+            "rho_ci": [
+              0.006109074204971593,
+              0.0781305317566197
+            ],
+            "spearman_rho": 0.04618997266467925,
+            "top1_regret": 1.3931474135295585,
+            "top_quartile_hit": 0.1
+          },
+          "redchi": {
+            "n_spectra": 30,
+            "rho_ci": [
+              -0.14172215846836822,
+              -0.014410242168367896
+            ],
+            "spearman_rho": -0.07909550333039433,
+            "top1_regret": 1.3749429051534574,
+            "top_quartile_hit": 0.06666666666666667
+          }
+        },
+        "SNR200": {
+          "aic": {
+            "n_spectra": 30,
+            "rho_ci": [
+              -0.13187944841586693,
+              -0.0011579658885295628
+            ],
+            "spearman_rho": -0.05165814491606885,
+            "top1_regret": 0.8874965459063155,
+            "top_quartile_hit": 0.03333333333333333
+          },
+          "bic": {
+            "n_spectra": 30,
+            "rho_ci": [
+              -0.01389559066235476,
+              0.106500696025594
+            ],
+            "spearman_rho": 0.0365724226460587,
+            "top1_regret": 0.8838576904985902,
+            "top_quartile_hit": 0.06666666666666667
+          },
+          "redchi": {
+            "n_spectra": 30,
+            "rho_ci": [
+              -0.14442407887493722,
+              -0.0009328058546488148
+            ],
+            "spearman_rho": -0.07719772590197088,
+            "top1_regret": 0.8874965459063155,
+            "top_quartile_hit": 0.03333333333333333
+          }
+        },
+        "SNR50": {
+          "aic": {
+            "n_spectra": 30,
+            "rho_ci": [
+              -0.11444562864967184,
+              0.038148542883223946
+            ],
+            "spearman_rho": -0.0025089260918140536,
+            "top1_regret": 0.5519218417412115,
+            "top_quartile_hit": 0.3
+          },
+          "bic": {
+            "n_spectra": 30,
+            "rho_ci": [
+              -0.03711923987119767,
+              0.10505323866493205
+            ],
+            "spearman_rho": 0.06314130664398701,
+            "top1_regret": 0.6683078713780103,
+            "top_quartile_hit": 0.1
+          },
+          "redchi": {
+            "n_spectra": 30,
+            "rho_ci": [
+              -0.1565827207044976,
+              0.0037955548568469016
+            ],
+            "spearman_rho": -0.019781917262380037,
+            "top1_regret": 0.5519218417412115,
+            "top_quartile_hit": 0.3
+          }
+        }
+      },
+      "within_peak_set": {
+        "SNR15": {
+          "aic": {
+            "n_spectra": 30,
+            "rho_ci": [
+              0.02441159178171546,
+              0.16041903170841587
+            ],
+            "spearman_rho": 0.09415899687233104,
+            "top1_regret": 0.44783526691316244,
+            "top_quartile_hit": 0.14444444444444443
+          },
+          "bic": {
+            "n_spectra": 30,
+            "rho_ci": [
+              0.022602518462177618,
+              0.17959956810833516
+            ],
+            "spearman_rho": 0.08369688610873871,
+            "top1_regret": 0.41592496270322105,
+            "top_quartile_hit": 0.15555555555555556
+          },
+          "redchi": {
+            "n_spectra": 30,
+            "rho_ci": [
+              0.02441159178171546,
+              0.16486542878294255
+            ],
+            "spearman_rho": 0.08108135841784062,
+            "top1_regret": 0.44783526691316244,
+            "top_quartile_hit": 0.14444444444444443
+          }
+        },
+        "SNR200": {
+          "aic": {
+            "n_spectra": 30,
+            "rho_ci": [
+              -0.13252006967216962,
+              0.08020951585420794
+            ],
+            "spearman_rho": 0.02702711947261354,
+            "top1_regret": 0.38231162746828057,
+            "top_quartile_hit": 0.2111111111111111
+          },
+          "bic": {
+            "n_spectra": 30,
+            "rho_ci": [
+              -0.12380164403584268,
+              0.09939005225412721
+            ],
+            "spearman_rho": 0.015693166145388505,
+            "top1_regret": 0.41965998651384256,
+            "top_quartile_hit": 0.16666666666666666
+          },
+          "redchi": {
+            "n_spectra": 30,
+            "rho_ci": [
+              -0.07672214559967716,
+              0.08369688610873871
+            ],
+            "spearman_rho": 0.016565008709021202,
+            "top1_regret": 0.38806740154682784,
+            "top_quartile_hit": 0.2222222222222222
+          }
+        },
+        "SNR50": {
+          "aic": {
+            "n_spectra": 30,
+            "rho_ci": [
+              -0.10819566214681743,
+              0.09067162661780026
+            ],
+            "spearman_rho": 0.0034873702545307798,
+            "top1_regret": 0.28200586401706407,
+            "top_quartile_hit": 0.28888888888888886
+          },
+          "bic": {
+            "n_spectra": 30,
+            "rho_ci": [
+              -0.12118611634494458,
+              0.09067162661780026
+            ],
+            "spearman_rho": 0.004359212818163476,
+            "top1_regret": 0.33647008243025117,
+            "top_quartile_hit": 0.23333333333333334
+          },
+          "redchi": {
+            "n_spectra": 30,
+            "rho_ci": [
+              -0.10462110763592339,
+              0.1020055799450253
+            ],
+            "spearman_rho": 0.0034873702545307798,
+            "top1_regret": 0.28200586401706407,
+            "top_quartile_hit": 0.28888888888888886
+          }
+        }
+      }
+    },
+    "selectors": [
+      "redchi",
+      "aic",
+      "bic"
+    ],
+    "strata": [
+      "full",
+      "within_peak_set"
+    ]
+  },
+  "snr_regimes": [
+    15,
+    50,
+    200
+  ],
+  "t5_ranking": {
+    "coverage_floor": 0.9,
+    "headline": "No configuration is rank-eligible in any SNR regime: the maximum empirical 95% coverage over all cells is 0.80, below the 0.90 floor, so the coverage-gated ranking is empty.",
+    "is_empty": true,
+    "max_coverage": 0.8,
+    "max_failure_rate": 0.05,
+    "n_rank_eligible": 0
+  },
+  "t6b_coverage": {
+    "nominal": 0.95,
+    "note": "Pooled over all grid configs per regime; inclusive endpoints (lo95 <= true <= hi95). Standard residual-bootstrap intervals undercover under realistic misspecification (FM4).",
+    "per_regime": {
+      "SNR15": {
+        "coverage": 0.2759259259259259,
+        "n": 2160
+      },
+      "SNR200": {
+        "coverage": 0.18287037037037038,
+        "n": 2160
+      },
+      "SNR50": {
+        "coverage": 0.23981481481481481,
+        "n": 2160
+      }
+    }
+  }
+}

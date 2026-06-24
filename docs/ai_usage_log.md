@@ -523,3 +523,69 @@ coverage floor, or the failure cap. Did NOT edit `validation_plan.md`,
 Tier-A/Tier-B truth file or the study results parquet/csv. Did NOT author
 `refimpl/ref_mdc.py` (kept blind). Did NOT build `viz.py`/`reporting.py` or any
 styled figure, and did NOT begin any Day-9 work. Did NOT commit or push.
+
+## Day 9 — report_data.json + figures F1-F9 + QA harness - Avin Gupta, 2026-06-24
+
+**What this session implemented (factual; awaiting human review/signature):**
+- `src/ramanuq/reporting.py`: reads the existing study parquet
+  (`data/synthetic/results/tierB_grid_results.parquet`) and the frozen
+  calibrations and RECOMPUTES every cited number (no copy from `protocol.md`),
+  emitting `docs/report_data.json`. Keys: each gate (V1, V1b, V2, V3, V4, V6;
+  V5 marked `pending_day10`); `t5_ranking` (n_rank_eligible=0, is_empty,
+  max_coverage=0.80, coverage_floor=0.90); `gate_v3` (n_classes=72,
+  n_classes_passing=9, best_class pseudo_voigt/poly5/DG/area,
+  best_class_mean_abs_bias); `q1b_stability` (per-regime "undefined; 0
+  rank-eligible configs"); `q2_audit.by_stratum` (spearman_rho + rho_ci,
+  top1_regret, top_quartile_hit per full/within_peak_set × SNR × selector via
+  `selectors.audit`); `t6b_coverage` per regime; `mdc.per_regime` (protocol and
+  naive σ_single, bias, MDC in I_D/I_G and Δn_D central + range, plus protocol
+  RMSE/coverage/failure). `select_protocol_config` mirrors notebook 04
+  (smallest signed-error sd among DG/area). A `self_check` compares recomputed
+  values to the authored protocol/validation numbers (atol 1e-3); `write_report_data`
+  refuses to write if the self-check fails. Self-check PASSED.
+- `src/ramanuq/viz.py`: one Okabe-Ito colorblind-safe style, 300 dpi, PNG+PDF.
+  Figures F1 (recovery parity + coverage), F2 (hostile-fit anatomy, true bands
+  dashed, baseline-subtracted; fixed case `tierB_stage1_blmild_snr50_i3`; true
+  components from `hostile.assemble`, fit curve rebuilt from `fit_spectrum`),
+  F3 (per-config accuracy strip, naive + protocol flagged), F4 (RMSE/coverage
+  maps over baseline×lineshape, DG/area, per SNR), F5 (selector scatter +
+  top-1 regret + T6b coverage), F6 (protocol card), F7 (MDC curves I_D/I_G and
+  Δn_D, protocol vs naive), F8 (digitized published spectra; raises
+  `FileNotFoundError` when `data/digitized/` is empty), F9 (rank-stability empty
+  state). All cited numbers (F6/F7 and annotated values on F1/F4/F5/F9) read
+  from `docs/report_data.json`; F3/F4 read raw arrays from the parquet.
+  Non-schema keys (palette names, report keys, computed columns) held as named
+  constants to satisfy the `test_grid.py` schema-freeze scan (cf. selectors.py).
+- `scripts/make_all_figures.py`: Agg backend, `SOURCE_DATE_EPOCH` pinned, fixed
+  SEED, stripped figure metadata; recomputes `report_data.json`, generates
+  F1-F7 and F9 (F8 skipped cleanly), and verifies the 16 output files are
+  byte-identical across two consecutive runs.
+- `scripts/figure_qa.py`: per figure asserts on-disk PNG/PDF exist and exceed a
+  size threshold, axis labels present (where applicable), an explanatory element
+  present (legend/colorbar/table/annotation per figure kind), and two in-memory
+  renders are byte-identical. F8 reported DEFERRED.
+- `tests/test_hostile.py`: renamed the stale stub-guard
+  `test_no_day5_scope_added` → `test_hostile_does_not_import_downstream`,
+  removing `reporting`/`viz` from the "stays a stub" list (now implemented, as
+  Day 8 did for `mdc`) while keeping the invariant that `hostile.py` imports no
+  reporting/viz code.
+- `docs/day9_briefing.md` and `docs/day9_quiz.md` authored (teaching material;
+  quiz answers in a separate marked section).
+
+**Gate/QA results this session:** `ruff check .` clean; `figure_qa.py` 8/8
+generated figures PASS, F8 DEFERRED; `make_all_figures.py` reports all 16 files
+byte-identical across two runs; `report_data.json` self-check PASSED (reproduces
+authored protocol MDC 0.529/0.271/0.565, naive 0.745/0.763/0.703, bias
++0.022/−0.086/−0.016, RMSE 0.133/0.109/0.141, coverage 0.467/0.233/0.200, T6b
+0.276/0.240/0.183, V3 best 0.0052); full suite `pytest -q` 787 passed, 2 warnings.
+
+**What was NOT done:** did NOT re-run the Day-6 study (read the parquet only);
+did NOT alter any pre-registration tolerance, the ranking rule, the coverage
+floor, or the failure cap. Did NOT edit `validation_plan.md`,
+`progress_journal.md`, or `protocol.md` (no number or word changed). Did NOT
+modify `calibrations.yaml`, `metrics.py`, `grid.py`, `selectors.py`, `mdc.py`,
+any Tier-A/Tier-B truth file, or the study parquet/csv. Did NOT select or
+fabricate demonstration spectra (F8 raises until the human digitizes). Did NOT
+author interpretive prose. Did NOT begin Day-10 report work (no
+`report_template.md`, `build_report.py`, README assembly, or Gate V5 assertion).
+Did NOT commit or push.

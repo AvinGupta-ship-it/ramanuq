@@ -308,18 +308,15 @@ def test_tierA_untouched_by_tierB_suite(tmp_path):
 
 
 # ``mdc`` was a stub through Day 7 and is implemented on Day 8 (P9 / Sec 9.8);
-# it is therefore no longer guarded here. ``reporting`` and ``viz`` remain
-# Day-9+ stubs and must stay un-implemented.
-_DAY5_STUBS = ["reporting", "viz"]
+# ``reporting`` and ``viz`` are the Day-9 deliverables (P10) and are likewise no
+# longer guarded as stubs. No future-day stubs remain to protect, so the guard
+# now only enforces the hostile-layer invariant: the Tier-B generator must not
+# pull in any reporting/viz code (those are downstream of the frozen study).
+_DOWNSTREAM_OF_STUDY = ["reporting", "viz"]
 
 
-def test_no_day5_scope_added():
-    """The remaining future-day stubs stay stubs; hostile pulls in no such code."""
-    for name in _DAY5_STUBS:
-        text = (_SRC / f"{name}.py").read_text()
-        assert "def " not in text and "class " not in text, (
-            f"Day-5 stub {name}.py gained implementation"
-        )
+def test_hostile_does_not_import_downstream():
+    """hostile.py (the science/generation layer) imports no reporting/viz code."""
     src = (_SRC / "hostile.py").read_text()
-    for name in _DAY5_STUBS:
+    for name in _DOWNSTREAM_OF_STUDY:
         assert f"import {name}" not in src and f"from .{name}" not in src

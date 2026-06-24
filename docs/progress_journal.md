@@ -159,6 +159,8 @@ disordered-carbon suite tested here.
 ## Day 7 - 2026-06-22
 The deeper point is that goodness-of-fit is not a usable accuracy selector on hostile spectra — its apparent signal is almost entirely the peak-set decision, which AIC/BIC's complexity penalty handles only coarsely. The practical advice the protocol should carry is therefore don't trust fit statistics to pick your analysis, and the citable result is the undercoverage, not the selectors. The CX-4 catch is also worth keeping: a filter that looked correct in my read (uniform across selectors) was incomplete (wrong columns), and the independent audit caught what I skimmed — exactly why the two-pass design exists.<hasH: 0fb6ff0baedef3ba790603f883e621a33021c040>
 
-## Day 8 = 2026-06-23
+## Day 8 - 2026-06-23
 CX-1 NIT (deferred): unused _CONFIG_COLUMNS/_REGIME_COLUMNS in mdc.py — non-behavioral, fails loud on typo, fix in next cleanup pass. 
 Files produced: mdc.py, test_mdc.py, notebook 04, protocol.md (recommendations mine), ref_mdc.py (blind clean-room), V6 differential extension. What the MDC analysis showed: naive requires larger shift to deect than protocol config. Hand-pin #3: sigma=0.10 → MDC=0.396203, code matches. Gate V6 on mdc green; CX-1 clean (1 deferred nit). My protocol recommendation in brief: poly5 / gaussian / DG / area for SNR15, als / pseudo_voigt / DG / area for SNR50 and SNR200, but recall that error bars undercover due to no config (including recommendations) reaching 0.90 coverage floor. Commit: [65f3c8a0d452ab83bef74a40be20e631e1f68821]. Next (Day 9): viz.py F1–F9 + figure QA harness + report_data.json + select 3 demonstration spectra (Gate V5).
+
+## Day - 2026-06-24
