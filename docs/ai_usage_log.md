@@ -589,3 +589,61 @@ fabricate demonstration spectra (F8 raises until the human digitizes). Did NOT
 author interpretive prose. Did NOT begin Day-10 report work (no
 `report_template.md`, `build_report.py`, README assembly, or Gate V5 assertion).
 Did NOT commit or push.
+
+## Day 10 — report assembly (template + builder + README) + Gate V5 (Avin Gupta - 2026-06-24)
+
+**Role:** Implementer (report assembly / plumbing). Executed the Day-10 contract
+(manual prompt P11 / §9.10).
+
+**What this session built:**
+- `docs/report_template.md`: the report skeleton (Abstract; 1 Introduction;
+  2 Methods; 3 Instrument validation; 4 Q1/Q1b; 5 Q2; 6 Q3; 7 Protocol and
+  disclosure checklist; 8 Limitations; References). Every reported result numeral
+  is a `{{key}}` placeholder bound to a key path in `docs/report_data.json`; a
+  parseable PLACEHOLDER MAP block at the top lists each placeholder and its exact
+  JSON path. Interpretive sections (Abstract, Introduction framing, Q1+Q1b, Q2
+  interpretation, Q3 interpretation, Limitations, disclosure checklist) are left
+  as empty `AUTHOR:` HTML-comment slots, plus a marked slot for the author's
+  verbatim Q2 verdict. No prose was written into any author slot.
+- `scripts/build_report.py`: loads `report_data.json`, parses the template's
+  PLACEHOLDER MAP, resolves and formats every `{{key}}` from its JSON path,
+  writes `docs/report_draft.md`, and renders `docs/report.pdf` via pandoc
+  (best-effort). Fails loudly listing any unresolved/unmapped placeholders.
+  This run resolved 79 unique placeholders (81 substitutions); pandoc is not
+  installed in this environment, so the PDF render was skipped with a clear note
+  (the Markdown draft was written).
+- `README.md`: assembled from a template with two empty `AUTHOR: FINDING
+  SENTENCE` slots, the F3 figure embedded, a quickstart, the V1–V6 gates table
+  with tolerances, a link to `docs/protocol.md`, the citation pointer to
+  `CITATION.cff`, and an AI-disclosure pointer to `docs/ai_usage_log.md`. The
+  finding sentences were not written.
+- `notebooks/04_mdc_casestudy_q3.ipynb`: added and executed a Gate V5 cell. It
+  loads the digitized Cançado-2011 L_D=7 nm spectrum from `data/digitized/`, runs
+  it through the pipeline in HEIGHT mode (paper-stated peak-height ratio),
+  extracts I_D/I_G, and compares it to the published target 1.6 within the
+  pre-registered ±10% window [1.44, 1.76].
+- `docs/briefings/day10_briefing.md` and `docs/briefings/day10_quiz.md`:
+  teaching material (quiz answers in a separate marked section).
+
+**Gate V5 result:** measured I_D/I_G = 1.5227 (config
+`baseline=linear|lineshape=lorentzian|bwf_g=False|peak_set=DG|intensity=height`,
+fixed a priori from the paper's stated method + textbook Lorentzian + linear
+baseline; not tuned to pass), target 1.6, window [1.440, 1.760] → **PASS**. The
+result was written into `docs/report_data.json` by replacing the explicitly
+`pending_day10` `gates.V5` placeholder; this is the only change to that file.
+
+**Gate/QA results this session:** `ruff check .` clean; full suite `pytest -q`
+787 passed, 2 warnings (the pre-existing stage-guard warnings).
+
+**What was NOT done:** did NOT author any interpretive prose (all author slots
+left empty). Did NOT hard-code any number in the template or the builder (every
+result numeral is a placeholder resolved from `report_data.json`). Did NOT touch
+the recomputed values in `report_data.json` (only the explicitly pending
+`gates.V5` placeholder was filled). Did NOT edit `validation_plan.md`,
+`progress_journal.md`, or any number in `protocol.md`, and did NOT alter the
+Day-7 Q2 verdict text. Did NOT weaken the Gate V5 ±10% tolerance. Did NOT modify
+any science module, calibration, truth file, the study parquet, or any gate
+tolerance. Did NOT begin any Day-11 release work. Did NOT commit or push.
+
+Signed: Avin Gupta - I authored all interpretive prose in the report (abstract, introduction, Q1/Q1b, Q2 interpretation, Q3, limitations), the disclosure checklist, and the two README finding sentences; the Q2 verdict is included verbatim from my Day-7 text. I ran and interpreted Gate V5 and ratified its configuration. I resolved all CX-5 prose-critique flags myself, including softening the §4 peak-set language from causal to associational to match my pre-registration.
+

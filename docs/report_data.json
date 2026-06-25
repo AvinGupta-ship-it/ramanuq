@@ -7,6 +7,7 @@
       "lineshape": "pseudo_voigt",
       "peak_set": "DG"
     },
+    "best_class_label": "pseudo_voigt/poly5/DG/area",
     "best_class_mean_abs_bias": 0.005244204470775101,
     "n_classes": 72,
     "n_classes_passing": 9,
@@ -122,11 +123,24 @@
       "tolerance": "exact recovery (atol 1e-12)"
     },
     "V5": {
+      "citation_doi": "10.1021/nl201432g",
+      "config": "baseline=linear|lineshape=lorentzian|bwf_g=False|peak_set=DG|intensity=height",
+      "excitation_nm": 514.5,
+      "intensity_mode": "height",
+      "measured_idig": 1.5226796786121322,
       "name": "Published-spectrum reproduction",
-      "note": "No digitized spectrum present yet; F8 / V5 are deferred to Day 10.",
+      "note": "Cancado 2011 L_D=7 nm graphene; paper defines I_D/I_G as the peak-height ratio. Demonstration config fixed a priori from the paper stated method (height, DG) + textbook Lorentzian + linear baseline; not tuned to pass. Asserted on Day 10 per validation_plan.md.",
+      "result": "PASS",
       "source": "validation_plan.md Gate V5",
-      "status": "pending_day10",
-      "tolerance": "within +/-10% of >=1 digitized published spectrum"
+      "spectrum": "cancado2011_v5",
+      "status": "PASS",
+      "target": 1.6,
+      "tolerance": "within +/-10% of >=1 digitized published spectrum",
+      "tolerance_frac": 0.1,
+      "window": [
+        1.4400000000000002,
+        1.7600000000000002
+      ]
     },
     "V6": {
       "name": "Cross-implementation agreement",
