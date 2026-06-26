@@ -241,7 +241,10 @@ def _compute_v5_gate(cals, digitized_dir=DEFAULT_DIGITIZED_DIR):
         peak_set="DG", lineshape="lorentzian", bwf_g=False, baseline_method="linear"
     )
     fit = fit_spectrum(spec, cfg, n_boot=0, seed=0)
-    measured = float(compute_metrics(fit, cals, "height").id_ig)
+    # Round to 4 dp: honest precision for a hand-digitized spectrum and far
+    # inside the +/-10% window, so it is reproducible across machines despite
+    # optimizer floating-point noise in the ~11th significant figure.
+    measured = round(float(compute_metrics(fit, cals, "height").id_ig), 4)
 
     result = "PASS" if window[0] <= measured <= window[1] else "MISS"
     return {

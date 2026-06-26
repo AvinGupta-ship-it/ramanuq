@@ -127,7 +127,7 @@
       "config": "baseline=linear|lineshape=lorentzian|bwf_g=False|peak_set=DG|intensity=height",
       "excitation_nm": 514.5,
       "intensity_mode": "height",
-      "measured_idig": 1.5226796786121322,
+      "measured_idig": 1.5227,
       "name": "Published-spectrum reproduction",
       "note": "Cancado 2011 L_D=7 nm graphene; paper defines I_D/I_G as the peak-height ratio. Demonstration config fixed a priori from the paper stated method (height, DG) + textbook Lorentzian + linear baseline; not tuned to pass. Asserted on Day 10 per validation_plan.md.",
       "result": "PASS",

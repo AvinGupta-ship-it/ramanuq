@@ -747,3 +747,27 @@ fresh-clone reproduction; touched no module logic, science, or prose.
 
 Signed: Avin Gupta, 2026-06-25
 
+## 2026-06-25 — Day 11, Implementer (Gate V5 cross-machine reproducibility rounding) — agent session
+
+- A fresh-clone reproduction showed `gates.V5.measured_idig` differed in the
+  ~11th significant figure between machines (1.5226796786121322 vs
+  1.5226795636072374) — optimizer floating-point noise from a different library
+  build. The science is unchanged (V5 = PASS, ~1.5227 vs target 1.6, well inside
+  the ±10% window [1.44, 1.76]).
+- Fix: in `_compute_v5_gate()` in `src/ramanuq/reporting.py`, rounded the measured
+  value to 4 decimal places before storing it
+  (`measured = round(float(... .id_ig), 4)`). 4 dp is the honest precision for a
+  hand-digitized spectrum and is far inside the gate, so the PASS/MISS decision is
+  unaffected. No other value, the window, tolerance, config, note, target, or
+  result was changed.
+- Regenerated `docs/report_data.json` via `write_report_data()`: the ONLY changed
+  line is `measured_idig` -> 1.5227. Regenerated all 18 figure artifacts
+  (byte-identical, no figure file modified) and rebuilt the report
+  (`docs/report.pdf`). `report_draft.md` was unchanged.
+- Verified on-machine determinism: re-running `write_report_data()` repeatedly
+  keeps `measured_idig` at exactly 1.5227 and the diff at a single line.
+- `pytest` (787 passed) and `figure_qa` (9/9 PASS) re-confirmed green; no test
+  pinned the old 16-digit value, so no test required updating.
+
+Signed: Avin Gupta, 2026-06-25
+
