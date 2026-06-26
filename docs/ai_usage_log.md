@@ -716,3 +716,34 @@ regenerates byte-identically from code; authored no interpretation.
 
 Signed: Avin Gupta, 2026-06-25
 
+## 2026-06-25 — Day 11, Implementer (runtime dependency fix) — Avin Gupta, 6/25/2026
+
+**Role:** Implementer. Fixed missing runtime dependency declarations exposed by a
+fresh-clone reproduction; touched no module logic, science, or prose.
+
+**What this session implemented:**
+- A fresh-clone run of `repro.sh` failed at `pandas.read_parquet` ("Unable to
+  find a usable engine; tried using: 'pyarrow', 'fastparquet'") and skipped the
+  PDF render because `xhtml2pdf` was absent. The local `.venv` had both installed
+  from earlier days, which had masked the gap. Both are real runtime needs:
+  `pyarrow` is the parquet engine for `pandas.read_parquet`, and `xhtml2pdf`
+  (`from xhtml2pdf import pisa`) is the report PDF engine in
+  `scripts/build_report.py`.
+- Added `"pyarrow"` and `"xhtml2pdf"` to `[project].dependencies` in
+  `pyproject.toml` (unpinned, matching the existing no-pin convention there).
+- Audited every third-party top-level import across `src/ramanuq/`, `scripts/`,
+  and `refimpl/` (AST walk, excluding stdlib and the local package): the complete
+  set is `lmfit, matplotlib, numpy, pandas, scipy, xhtml2pdf, yaml`. All are now
+  covered by declared dependencies; no undeclared runtime import exists beyond
+  `pyarrow`/`xhtml2pdf`.
+- No lockfile was updated: `requirements.txt` is pinned but is not referenced by
+  `repro.sh`, `bootstrap.sh`, or CI (all use `pip install -e .`/`-e ".[dev]"`),
+  and there is no `uv.lock`; so no pinned reproduction manifest required a change.
+- Verified in a throwaway venv built from the system Python (not the repo
+  `.venv`): `pip install -e .` followed by importing
+  `pyarrow, xhtml2pdf, pandas, numpy, scipy, lmfit, matplotlib, yaml` and
+  `from ramanuq.reporting import write_report_data` all succeeded; temp venv then
+  removed. Local `pytest` (787 passed) and `figure_qa` (9/9 PASS) re-confirmed.
+
+Signed: Avin Gupta, 2026-06-25
+
