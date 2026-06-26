@@ -1,20 +1,13 @@
-<!--
-  RamanUQ v2.1 — README (Day-10 template, manual prompt P11 / §9.10).
-  The two finding sentences are the AUTHOR's to write; the slots below are left
-  intentionally empty. Gate tolerances are the pre-registered criteria from
-  docs/validation_plan.md (not computed results).
--->
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20918643.svg)](https://doi.org/10.5281/zenodo.20918643)
 
 # RamanUQ v2.1
 
 Open, validated pipeline quantifying how analysis choices affect Raman defect
 metrics (I_D/I_G) in carbon nanomaterials.
 
-<!-- AUTHOR: FINDING SENTENCE 1 -->
 I_D/I_G is the standard Raman measure of disorder and defect density in carbon nanomaterials, yet on hostile synthetic ground truth no peak-fitting configuration met our pre-registered coverage floor, meaning the error bars routinely reported on this ratio undercover the truth under realistic misspecification and the uncertainties used to compare materials across studies can overstate precision, on the spectra and regimes tested here.
 
 
-<!-- AUTHOR: FINDING SENTENCE 2 -->
 An evidence-based protocol detected smaller changes in I_D/I_G than a naive default pipeline in every regime tested, tightening the smallest real shift a study can claim, such as the kind a hydrogenation or defect-engineering step is meant to produce, without asserting any universally correct procedure, on the regimes tested here.
 
 ![F3 — per-configuration accuracy strip](figures/F3.png)

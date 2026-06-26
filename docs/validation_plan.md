@@ -250,3 +250,12 @@ report_data.json populated from the Day-6 study parquet + recorded results; key 
 
 ## DAY 10 - 2026-06-24 ##
 Day 10: report PDF built via number injection — all 80 reported numerals resolved from report_data.json; grep confirmed no stray hand-typed result numbers. All interpretive prose (abstract, Q1/Q1b/Q2/Q3, limitations) and the disclosure checklist authored by me; Q2 verdict included verbatim from Day-7. CX-5 prose-critique flags all resolved by me, including softening the §4 peak-set language from causal to descriptive to match the pre-registration's "NOT causal" marking. <hash: 2b1b0ba>
+
+## Day 11 — Release record (appended 2026-06-25)
+- Released as v0.1.0 at commit 609dc01, tag v0.1.0, GitHub Release published.
+- Zenodo DOI: 10.5281/zenodo.20918643.
+- Fresh-clone reproduction: bash repro.sh in a clean clone of the pushed repo regenerated report_data.json, report_draft.md, and all 18 figure files with an empty git diff — byte-identical reproduction confirmed cross-machine.
+- Validation suite green at release: gates V1–V6 all pass in CI on Python 3.11/Linux (36 validation tests, 787 total, 0 failed).
+- Number injection verified: report PDF built from report_data.json; no stray hand-typed result numerals beyond the authored Q2 verdict and registered prediction.
+- Reproducibility fixes made on Day 11 (all pushed, CI green): added repro.sh/bootstrap.sh; wired Gate V5 + gate_v3 best_class_label into write_report_data so report_data.json regenerates from code; declared runtime deps pyarrow and xhtml2pdf; rounded V5 measured I_D/I_G to 4 dp (1.5227, still PASS) for cross-machine reproducibility.
+- All interpretive prose, the disclosure checklist, and the two README finding sentences are author-written; the Q2 verdict appears verbatim from Day 7.
