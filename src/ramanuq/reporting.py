@@ -22,10 +22,13 @@ import os
 
 import numpy as np
 import pandas as pd
+import yaml
 
+from .fit import PipelineConfig, fit_spectrum
 from .grid import COVERAGE_FLOOR, MAX_FAILURE_RATE, rank_configurations
+from .io import load_spectrum
 from .mdc import estimate_bias, estimate_sigma_single, mdc, to_delta_nd
-from .metrics import load_calibrations
+from .metrics import compute_metrics, load_calibrations
 from .selectors import audit, coverage_under_misspecification
 
 # --------------------------------------------------------------------------- #
@@ -39,6 +42,7 @@ DEFAULT_CAL_PATH = os.path.join(
     _REPO_ROOT, "data", "calibrations", "calibrations.yaml"
 )
 DEFAULT_TIERB_DIR = os.path.join(_REPO_ROOT, "data", "synthetic", "tierB")
+DEFAULT_DIGITIZED_DIR = os.path.join(_REPO_ROOT, "data", "digitized")
 DEFAULT_OUTPUT = os.path.join(_REPO_ROOT, "docs", "report_data.json")
 
 MATERIAL_CLASS = "synthetic_disordered_carbon"
@@ -183,6 +187,85 @@ def _wavelength_nm(tierB_dir):
     return float(next(iter(wls)))
 
 
+#: Gate V5 demonstration config, fixed a priori from the paper's stated method
+#: (HEIGHT, DG) + textbook Lorentzian + linear baseline. Same dict the Day-10
+#: notebook (04_mdc_casestudy_q3.ipynb cell 8) used; not tuned to pass.
+_V5_CONFIG = {
+    "baseline": "linear",
+    "lineshape": "lorentzian",
+    "bwf_g": False,
+    "peak_set": "DG",
+    "intensity": "height",
+}
+_V5_SPECTRUM = "cancado2011_v5"
+_V5_TOL_FRAC = 0.10
+
+#: Pending placeholder used when no digitized spectrum is present (pre-Day-10).
+_V5_PENDING = {
+    "name": "Published-spectrum reproduction",
+    "status": "pending_day10",
+    "tolerance": "within +/-10% of >=1 digitized published spectrum",
+    "source": "validation_plan.md Gate V5",
+    "note": "No digitized spectrum present yet; F8 / V5 are deferred "
+    "to Day 10.",
+}
+
+
+def _compute_v5_gate(cals, digitized_dir=DEFAULT_DIGITIZED_DIR):
+    """Gate V5: reproduce a digitized published spectrum's I_D/I_G (HEIGHT mode).
+
+    Ported verbatim from notebooks/04_mdc_casestudy_q3.ipynb cell 8. Loads the
+    Cancado 2011 L_D=7 nm digitization, runs it through the pipeline in HEIGHT
+    mode, and compares the extracted I_D/I_G to the published target read from
+    ``provenance.yaml`` within the pre-registered +/-10% window. Returns the full
+    ``gates.V5`` dict. If the digitized spectrum is genuinely absent, returns the
+    existing pending placeholder rather than fabricating a result.
+    """
+    csv_path = os.path.join(digitized_dir, "cancado2011_v5_digitization_a.csv")
+    prov_path = os.path.join(digitized_dir, "provenance.yaml")
+    if not (os.path.exists(csv_path) and os.path.exists(prov_path)):
+        return dict(_V5_PENDING)
+
+    with open(prov_path) as fh:
+        prov = {s["id"]: s for s in (yaml.safe_load(fh) or {}).get("spectra", [])}
+    v5 = prov[_V5_SPECTRUM]
+    target = float(v5["published_id_ig"])
+    excitation_nm = float(v5["excitation_nm"])
+    window = [target * (1 - _V5_TOL_FRAC), target * (1 + _V5_TOL_FRAC)]
+
+    d = pd.read_csv(csv_path)
+    spec = load_spectrum(
+        d.iloc[:, 0].to_numpy(), d.iloc[:, 1].to_numpy(), excitation_nm
+    )
+    cfg = PipelineConfig(
+        peak_set="DG", lineshape="lorentzian", bwf_g=False, baseline_method="linear"
+    )
+    fit = fit_spectrum(spec, cfg, n_boot=0, seed=0)
+    measured = float(compute_metrics(fit, cals, "height").id_ig)
+
+    result = "PASS" if window[0] <= measured <= window[1] else "MISS"
+    return {
+        "name": "Published-spectrum reproduction",
+        "status": result,
+        "source": "validation_plan.md Gate V5",
+        "tolerance": "within +/-10% of >=1 digitized published spectrum",
+        "spectrum": _V5_SPECTRUM,
+        "citation_doi": "10.1021/nl201432g",
+        "excitation_nm": excitation_nm,
+        "config": _config_str(_V5_CONFIG),
+        "intensity_mode": "height",
+        "measured_idig": measured,
+        "target": target,
+        "tolerance_frac": _V5_TOL_FRAC,
+        "window": window,
+        "result": result,
+        "note": "Cancado 2011 L_D=7 nm graphene; paper defines I_D/I_G as the "
+        "peak-height ratio. Demonstration config fixed a priori from the "
+        "paper stated method (height, DG) + textbook Lorentzian + linear "
+        "baseline; not tuned to pass. Asserted on Day 10 per validation_plan.md.",
+    }
+
+
 # --------------------------------------------------------------------------- #
 # Top-level builder.
 # --------------------------------------------------------------------------- #
@@ -234,14 +317,7 @@ def compute_report_data(
             "tolerance": "exact recovery (atol 1e-12)",
             "source": "validation_plan.md Gate V4 (Day 7)",
         },
-        "V5": {
-            "name": "Published-spectrum reproduction",
-            "status": "pending_day10",
-            "tolerance": "within +/-10% of >=1 digitized published spectrum",
-            "source": "validation_plan.md Gate V5",
-            "note": "No digitized spectrum present yet; F8 / V5 are deferred "
-            "to Day 10.",
-        },
+        "V5": _compute_v5_gate(cals),
         "V6": {
             "name": "Cross-implementation agreement",
             "status": "PASS",
@@ -267,12 +343,16 @@ def compute_report_data(
     }
 
     # ----- Gate V3 standalone block (n_classes_passing of 72, best) -------- #
+    _bc = v3["best_class"]
     gate_v3 = {
         "slice": v3["slice"],
         "n_classes": v3["n_classes"],
         "n_classes_passing": v3["n_classes_passing"],
         "pass": v3["pass"],
-        "best_class": v3["best_class"],
+        "best_class": _bc,
+        "best_class_label": "{lineshape}/{baseline}/{peak_set}/{intensity}".format(
+            **_bc
+        ),
         "best_class_mean_abs_bias": v3["best_class_mean_abs_bias"],
     }
 

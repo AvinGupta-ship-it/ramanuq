@@ -1,11 +1,13 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
-title: "ramanuq"
-abstract: "A research package for quantitative Raman spectral analysis."
+title: "RamanUQ: an independently-verified pipeline for quantifying analysis-choice effects on Raman defect metrics in carbon nanomaterials"
 type: software
-version: 0.0.0
 authors:
-  - family-names: "TODO"
-    given-names: "TODO"
-license: "TODO"
-repository-code: "TODO"
+  - family-names: Gupta
+    given-names: Avin
+    # orcid: "https://orcid.org/0000-0000-0000-0000"
+version: 0.1.0
+date-released: 2026-06-25
+license: MIT
+repository-code: "https://github.com/AvinGupta-ship-it/ramanuq"
+# doi: "10.5281/zenodo.XXXXXXX"

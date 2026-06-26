@@ -647,3 +647,72 @@ tolerance. Did NOT begin any Day-11 release work. Did NOT commit or push.
 
 Signed: Avin Gupta - I authored all interpretive prose in the report (abstract, introduction, Q1/Q1b, Q2 interpretation, Q3, limitations), the disclosure checklist, and the two README finding sentences; the Q2 verdict is included verbatim from my Day-7 text. I ran and interpreted Gate V5 and ratified its configuration. I resolved all CX-5 prose-critique flags myself, including softening the §4 peak-set language from causal to associational to match my pre-registration.
 
+## Day 11 — release prep (release notes + CITATION.cff + Definition-of-Done pre-check) — agent session, 2026-06-25
+
+**Role:** Release implementer (plumbing/inspection only). Executed the Day-11
+release-prep contract with the project frozen.
+
+**What this session did (facts):**
+- Inspected `repro.sh` (did NOT run it) and reported on its contents. Finding:
+  no `repro.sh` exists in the working tree or git index, and no doc references
+  it by name; reported this as a gap for the human and proposed (did NOT apply)
+  a parquet-by-default reproduction script with the full ~7-hour study behind an
+  explicit `RUN_FULL_STUDY=1` opt-in.
+- Ran the check suites and recorded counts (silently fixed nothing): `pytest -q`
+  787 passed / 0 failed (2 pre-existing stage-guard warnings); `pytest -q -m
+  validation` 36 passed / 0 failed / 751 deselected; `ruff check .` clean;
+  `scripts/figure_qa.py` all 9 figures (F1-F9) PASS.
+- Drafted `docs/release_notes_v0.1.0.md` from the supplied template, filling every
+  result numeral by reading `docs/report_data.json` (V5 measured 1.523, t5 max
+  coverage 0.80 / floor 0.90 / n_rank_eligible 0, V3 9/72 best 0.0052, T6b
+  0.276/0.240/0.183, MDC naive/protocol ratios 1.407/2.819/1.245); left the
+  `[AVIN ...]` lead-sentence line as a literal placeholder.
+- Created/updated `CITATION.cff` to the supplied v0.1.0 content (date-released
+  2026-06-25; orcid and doi left commented for the human).
+- Produced the Definition-of-Done pre-check (PASS/GAP per item) and flagged
+  three items for the human without fixing them: missing `repro.sh`; empty
+  `docs/disclosure_checklist.md` stub; and that `docs/report.pdf` embeds a
+  PDF creation/mod timestamp (`/CreationDate`), so it cannot be byte-diffed.
+- Authored a Day-11 science briefing and quiz (teaching material).
+
+**What was NOT done:** did NOT author or edit any interpretive/finding prose
+(abstract, Q1/Q1b/Q2/Q3 interpretation, limitations, verdict, protocol
+recommendations, README finding sentences, disclosure checklist — all author
+slots left as the human's existing content or empty placeholders). Did NOT
+introduce any number or citation (every numeral in the release notes was read
+from `docs/report_data.json`). Did NOT create any git tag, GitHub release, or
+DOI. Did NOT run `repro.sh`. Did NOT weaken any gate or tolerance. Did NOT touch
+`docs/validation_plan.md`, `docs/progress_journal.md`, the values in
+`docs/report_data.json`, `docs/protocol.md`, the Day-7 Q2 verdict text,
+`data/calibrations/calibrations.yaml`, `src/ramanuq/{metrics,grid,selectors,mdc}.py`,
+the Tier-A/Tier-B truth files, or `data/synthetic/results/tierB_grid_results.parquet`.
+Files written this session: `docs/release_notes_v0.1.0.md` (new), `CITATION.cff`
+(updated), this `docs/ai_usage_log.md` append, and the Day-11 briefing/quiz.
+
+Signed: Avin Gupta, 2026-06-25
+
+## 2026-06-25 — Day 11, Implementer (reproducibility fix: Gate V5 into the generator) — Avin Gupta, 6/25/2026
+
+**Role:** Implementer. Fixed one reproducibility bug so `docs/report_data.json`
+regenerates byte-identically from code; authored no interpretation.
+
+**What this session implemented:**
+- Moved the Gate V5 computation (published-spectrum reproduction) verbatim from
+  `notebooks/04_mdc_casestudy_q3.ipynb` cell 8 into a new
+  `ramanuq.reporting._compute_v5_gate(cals, digitized_dir)` helper, and wired it
+  into `write_report_data()` so the `gates.V5` block is now produced by the
+  generator instead of being patched into the JSON out-of-band by the notebook.
+  Same `V5_CONFIG` (linear/lorentzian/no-BWF/DG/height), same `n_boot=0, seed=0`,
+  same height intensity mode, same ±10% window read from
+  `data/digitized/provenance.yaml`, same config string and note text.
+- Added `gate_v3.best_class_label` (derived from `best_class`, not hard-coded;
+  equals `pseudo_voigt/poly5/DG/area`).
+- Converted notebook 04 cell 8's `report_data.json` patch block (the
+  `json.load`/`json.dump` write and the `assert status == 'pending_day10'`) to a
+  diagnostic-only cell; `write_report_data()` is now the single source of truth.
+- Verified `git diff` on `docs/report_data.json` is EMPTY after regeneration
+  (byte-identical; `measured_idig` regenerated to the committed
+  1.5226796786121322), and that `repro.sh` (fast path) and `figure_qa` pass.
+
+Signed: Avin Gupta, 2026-06-25
+
