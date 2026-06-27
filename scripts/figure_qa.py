@@ -20,8 +20,6 @@ import os
 import sys
 import tempfile
 
-os.environ.setdefault("SOURCE_DATE_EPOCH", "1466000000")
-
 import matplotlib  # noqa: E402
 
 matplotlib.use("Agg")

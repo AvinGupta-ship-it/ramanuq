@@ -232,6 +232,8 @@ def compute_metrics(fit, calibrations, definition):
         / lorentzian_height_from_area(g_area, g_fwhm)
     )
 
+    # Note: the area (integrated) and height definitions are distinct measures;
+    # for the same spectrum they generally yield different I_D/I_G values.
     id_ig = area_ratio if definition == "area" else height_ratio
 
     # Bootstrap ratios under both definitions.

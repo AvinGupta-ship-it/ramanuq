@@ -93,6 +93,7 @@ _NAIVE_MDC = "naive_mdc_idig"
 _T5 = "t5_ranking"
 _COV_FLOOR = "coverage_floor"
 _MAX_COV = "max_coverage"
+_N_RANK_ELIGIBLE = "n_rank_eligible"
 _T6B = "t6b_coverage"
 _COVERAGE = "coverage"
 _NOMINAL = "nominal"
@@ -156,13 +157,23 @@ def load_report(path=DEFAULT_OUTPUT):
     return load_report_data(path)
 
 
+#: Pinned epoch for the PDF backend's creation date. Consolidated here so PDF-
+#: date determinism lives entirely in :func:`save_figure`: matplotlib's PDF
+#: backend reads ``SOURCE_DATE_EPOCH`` from the environment at write time, so
+#: pinning it just before saving yields a fixed creation date without callers
+#: having to set it themselves.
+_SOURCE_DATE_EPOCH = "1466000000"
+
+
 def save_figure(fig, stem, dpi=300):
     """Save ``fig`` as ``stem.png`` and ``stem.pdf`` with stripped metadata.
 
-    Metadata is fixed (no timestamps) so repeated renders are byte-identical;
-    PDF creation date determinism additionally relies on ``SOURCE_DATE_EPOCH``
-    being set by the driver.
+    Metadata is fixed (no timestamps) so repeated renders are byte-identical.
+    PDF creation-date determinism is handled here too: ``SOURCE_DATE_EPOCH`` is
+    pinned (via ``setdefault``, so an externally chosen value still wins) before
+    the PDF is written, which the PDF backend reads to stamp a fixed date.
     """
+    os.environ.setdefault("SOURCE_DATE_EPOCH", _SOURCE_DATE_EPOCH)
     os.makedirs(os.path.dirname(os.path.abspath(stem)), exist_ok=True)
     png_meta = {"Software": None}
     pdf_meta = {"Creator": "ramanuq", "Producer": "ramanuq"}
@@ -679,7 +690,9 @@ def figure_f9(df, report):
     """Show the empty ranking honestly: 0 rank-eligible -> stability undefined."""
     fig, ax = plt.subplots(figsize=(8, 4.4))
     snrs = list(SNR_REGIMES)
-    n_elig = [0 for _ in snrs]
+    # Rank-eligible count is read from report_data.json, not hard-coded.
+    n_eligible = report[_T5][_N_RANK_ELIGIBLE]
+    n_elig = [n_eligible for _ in snrs]
     bars = ax.bar([str(s) for s in snrs], n_elig,
                   color=[SNR_COLORS[s] for s in snrs], width=0.6)
     ax.set_ylim(0, 1)
@@ -688,8 +701,8 @@ def figure_f9(df, report):
     floor = report[_T5][_COV_FLOOR]
     max_cov = report[_T5][_MAX_COV]
     for b in bars:
-        ax.text(b.get_x() + b.get_width() / 2, 0.04, "0", ha="center",
-                va="bottom", fontsize=10, fontweight="bold")
+        ax.text(b.get_x() + b.get_width() / 2, 0.04, str(n_eligible),
+                ha="center", va="bottom", fontsize=10, fontweight="bold")
     ax.text(0.5, 0.62,
             "Ranking is EMPTY in every regime\n"
             f"(max empirical coverage {max_cov:.2f} < {floor:.2f} floor)\n"

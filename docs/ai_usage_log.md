@@ -799,3 +799,50 @@ Signed: Avin Gupta, 2026-06-25
 
 Signed: Avin Gupta - 2026-06-27
 
+## 2026-06-27 — Buffer day, Implementer (v0.2.0 cosmetic cleanup — byte-neutral refactors/doc) — agent session
+
+- Scope: byte-neutral cosmetic cleanup only. Every figure file (F1–F9 .png/.pdf)
+  and `docs/report_data.json` were required to stay byte-identical to their
+  committed state; no number, gate, tolerance, or science-module logic touched.
+- `requirements.txt`: added the two runtime pins already declared in
+  `pyproject.toml` but missing here — `pyarrow==24.0.0` and `xhtml2pdf==0.2.17` —
+  in the existing exact-pin style; no other line changed.
+- `src/ramanuq/viz.py` F9 (rank-stability): replaced the hard-coded rank-eligible
+  literal `0` with the value READ from `report_data.json`
+  (`t5_ranking.n_rank_eligible`, via a new `_N_RANK_ELIGIBLE` key constant). The
+  read value is 0, so rendered F9 is byte-identical.
+- `src/ramanuq/viz.py` `save_figure`: consolidated PDF creation-date determinism
+  (`SOURCE_DATE_EPOCH`, pinned to 1466000000) into the save helper via
+  `os.environ.setdefault`, and removed the duplicate set from
+  `scripts/make_all_figures.py` and `scripts/figure_qa.py`. matplotlib's PDF
+  backend reads the variable at write time, so output bytes are unchanged.
+- `src/ramanuq/mdc.py`: removed two dead module-level tuples (`_CONFIG_COLUMNS`,
+  `_REGIME_COLUMNS`) that no code referenced (confirmed by repo-wide grep and the
+  full test suite); `_ERROR_COLUMN` and `_CANCADO2011_KEY` (both used) kept.
+- `src/ramanuq/metrics.py`: added a brief FACTUAL note (NIT-2) at the I_D/I_G
+  definition selection — that the area (integrated) and height definitions yield
+  different I_D/I_G values for the same spectrum. Metadata only; no number,
+  finding, or claim added.
+- F6 protocol-card stability string — NOT changed (STOPPED and reported): the
+  only candidate value in `report_data.json`
+  (`q1b_stability.per_regime.SNR* == "undefined; 0 rank-eligible configs"`) is NOT
+  equal to the figure's current literal
+  (`"undefined\n(Q1b vacuous;\n0 rank-eligible\nconfigs)"`). Substituting it would
+  change rendered F6 bytes, so the literal was left as-is.
+- F2 hostile-fit curves — NOT refactored (STOPPED and reported): neither the
+  pipeline result (`FitResult`) nor the figure's data sources (study parquet,
+  `report_data.json`, tierB truth JSON) retain the fitted/true curves, so there is
+  no already-computed copy to read; the pipeline-internal best-fit curve differs
+  from the inline reconstruction at the ~7e-15 level, so byte-identity could not
+  be guaranteed. F2 left unchanged.
+- Verification: `python3 -m pytest -q` → 789 passed, 0 failed; `python3 -m ruff
+  check .` → All checks passed. Regenerated `report_data.json` and all 18 figure
+  artifacts (without RUN_FULL_STUDY) and byte-compared to committed: every PNG,
+  every PDF except F2, and `report_data.json` are byte-identical. `figures/F2.pdf`
+  differs by exactly 1 byte (115758 → 115757); the SAME 1-byte difference
+  reproduces from a CLEAN HEAD with zero edits, confirming it is a pre-existing
+  environment-level artifact independent of this pass. Committed figure bytes were
+  left untouched in the working tree.
+
+Signed: Avin Gupta - 2026-06-27
+

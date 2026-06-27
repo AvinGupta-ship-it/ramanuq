@@ -26,11 +26,6 @@ import math
 import numpy as np
 from scipy.stats import norm
 
-# Configuration-defining columns (the 5 DOF) and the regime keys, matching the
-# frozen grid schema (ramanuq.grid.RESULT_COLUMNS).
-_CONFIG_COLUMNS = ("baseline", "lineshape", "bwf_g", "peak_set", "intensity")
-_REGIME_COLUMNS = ("material_class", "snr_label")
-
 # The signed-error column produced by the truth join in ramanuq.grid.run_study.
 _ERROR_COLUMN = "error"
 

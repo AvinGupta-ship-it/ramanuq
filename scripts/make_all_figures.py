@@ -2,10 +2,10 @@
 
 Determinism contract:
 
-- Agg backend, one fixed ``SEED``, no embedded timestamps. ``SOURCE_DATE_EPOCH``
-  is pinned so the PDF backend writes a fixed creation date, and PNG/PDF metadata
-  is stripped in :func:`ramanuq.viz.save_figure`. Two consecutive runs therefore
-  produce byte-identical files.
+- Agg backend, one fixed ``SEED``, no embedded timestamps. PNG/PDF metadata is
+  stripped and ``SOURCE_DATE_EPOCH`` is pinned (for a fixed PDF creation date)
+  in :func:`ramanuq.viz.save_figure`. Two consecutive runs therefore produce
+  byte-identical files.
 - F8 reproduces the digitized published spectra described by
   ``data/digitized/provenance.yaml``; all nine figures (F1-F9) are generated.
 
@@ -17,9 +17,6 @@ from __future__ import annotations
 import hashlib
 import os
 import sys
-
-# Pin the PDF creation date BEFORE importing matplotlib/pyplot.
-os.environ.setdefault("SOURCE_DATE_EPOCH", "1466000000")
 
 import matplotlib  # noqa: E402
 
