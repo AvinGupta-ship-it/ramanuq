@@ -5,7 +5,7 @@ type: software
 authors:
   - family-names: Gupta
     given-names: Avin
-    # orcid: "https://orcid.org/0000-0000-0000-0000"
+    orcid: "https://orcid.org/0009-0009-4133-2275"
 version: 0.1.0
 date-released: 2026-06-25
 license: MIT
