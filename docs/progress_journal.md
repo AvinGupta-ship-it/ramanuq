@@ -171,3 +171,6 @@ The result I'd defend hardest is the empty ranking — it's counterintuitive but
 
 ## Day 11 - 2026-06-26
 Tagged v0.1.0 of the indexing pipeline with a Zenodo DOI; the defensible core is that a fresh clone regenerates every lattice-parameter table and all diffraction figures byte-for-byte, so the numbers are provably the code's, not hand-entered. The clean-clone test exposed that my published unit-cell value was pinned to 14 digits the optimizer couldn't reproduce on a different machine, which taught me that reproducibility is a property of the declared environment and the stored precision, not just of running the same script twice. The frozen, citable release means the downstream texture-analysis study can now depend on an exact version of the indexing method rather than a moving target.
+
+## Continued Improvements - 2026-06-27
+The second V5, in integrated-area mode, reproduced the published area ratio within tolerance — and because a height ratio of the same digitized curve would land lower, this is a concrete, real-data instance of the area-vs-height divergence the project is built around, now demonstrated on published spectra under both definitions (still only a demonstration, not a precision claim).
