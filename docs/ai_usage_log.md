@@ -797,5 +797,5 @@ Signed: Avin Gupta, 2026-06-25
 - `python3 -m pytest -q` → 789 passed; `python3 -m ruff check .` → All checks
   passed.
 
-Signed: ____________________ (human to sign)
+Signed: Avin Gupta - 2026-06-27
 
