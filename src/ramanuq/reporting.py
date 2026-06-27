@@ -210,6 +210,19 @@ _V5_PENDING = {
     "to Day 10.",
 }
 
+#: Gate V5b demonstration config: the same demonstration applied to a second
+#: published spectrum whose stated method is the integrated-AREA ratio. Fixed a
+#: priori from that paper's stated method (AREA, DG) + Lorentzian + linear
+#: baseline; reuses _V5_TOL_FRAC. Parallel to _V5_CONFIG; not tuned to pass.
+_V5B_CONFIG = {
+    "baseline": "linear",
+    "lineshape": "lorentzian",
+    "bwf_g": False,
+    "peak_set": "DG",
+    "intensity": "area",
+}
+_V5B_SPECTRUM = "fcnt_arxiv1711"
+
 
 def _compute_v5_gate(cals, digitized_dir=DEFAULT_DIGITIZED_DIR):
     """Gate V5: reproduce a digitized published spectrum's I_D/I_G (HEIGHT mode).
@@ -269,6 +282,63 @@ def _compute_v5_gate(cals, digitized_dir=DEFAULT_DIGITIZED_DIR):
     }
 
 
+def _compute_v5b_gate(cals, digitized_dir=DEFAULT_DIGITIZED_DIR):
+    """Gate V5b: reproduce a second published spectrum's I_D/I_G (AREA mode).
+
+    Parallel to :func:`_compute_v5_gate`, but for the integrated-AREA definition.
+    Loads the Maity et al. fCNT digitization, runs it through the pipeline, and
+    compares the extracted I_D/I_G (computed in AREA mode) to the published
+    target read from ``provenance.yaml`` within the pre-registered +/-10% window.
+    Returns a dict with the same keys as the V5 result. If the digitized
+    spectrum is genuinely absent, returns the existing pending placeholder rather
+    than fabricating a result.
+    """
+    csv_path = os.path.join(digitized_dir, "fcnt_arxiv1711_fig1a.csv")
+    prov_path = os.path.join(digitized_dir, "provenance.yaml")
+    if not (os.path.exists(csv_path) and os.path.exists(prov_path)):
+        return dict(_V5_PENDING)
+
+    with open(prov_path) as fh:
+        prov = {s["id"]: s for s in (yaml.safe_load(fh) or {}).get("spectra", [])}
+    entry = prov[_V5B_SPECTRUM]
+    target = float(entry["published_id_ig"])
+    excitation_nm = float(entry["excitation_nm"])
+    window = [target * (1 - _V5_TOL_FRAC), target * (1 + _V5_TOL_FRAC)]
+
+    d = pd.read_csv(csv_path)
+    spec = load_spectrum(
+        d.iloc[:, 0].to_numpy(), d.iloc[:, 1].to_numpy(), excitation_nm
+    )
+    cfg = PipelineConfig(
+        peak_set="DG", lineshape="lorentzian", bwf_g=False, baseline_method="linear"
+    )
+    fit = fit_spectrum(spec, cfg, n_boot=0, seed=0)
+    # Round to 4 dp for cross-machine reproducibility, mirroring V5.
+    measured = round(float(compute_metrics(fit, cals, "area").id_ig), 4)
+
+    result = "PASS" if window[0] <= measured <= window[1] else "MISS"
+    return {
+        "name": "Published-spectrum reproduction",
+        "status": result,
+        "source": "validation_plan.md Gate V5",
+        "tolerance": "within +/-10% of >=1 digitized published spectrum",
+        "spectrum": "fcnt_arxiv1711",
+        "citation_doi": "arXiv:1711.01957",
+        "excitation_nm": excitation_nm,
+        "config": _config_str(_V5B_CONFIG),
+        "intensity_mode": "area",
+        "measured_idig": measured,
+        "target": target,
+        "tolerance_frac": _V5_TOL_FRAC,
+        "window": window,
+        "result": result,
+        "note": "Maity et al. functionalized-CNT (fCNT) spectrum (arXiv:1711.01957), "
+        "reproduced in integrated-area mode; the paper defines I_D/I_G as the "
+        "integrated-area ratio. Demonstration config fixed a priori from the paper "
+        "stated method (area, DG) + Lorentzian + linear baseline.",
+    }
+
+
 # --------------------------------------------------------------------------- #
 # Top-level builder.
 # --------------------------------------------------------------------------- #
@@ -321,6 +391,7 @@ def compute_report_data(
             "source": "validation_plan.md Gate V4 (Day 7)",
         },
         "V5": _compute_v5_gate(cals),
+        "V5b": _compute_v5b_gate(cals),
         "V6": {
             "name": "Cross-implementation agreement",
             "status": "PASS",

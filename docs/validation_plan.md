@@ -37,6 +37,7 @@ pass in tests/test_selectors.py.)
 - **V5 — Published-spectrum reproduction:** At least **one digitized published
   spectrum** must be reproduced within **±10%**.
   Gate V5 (demonstration, ±10%): Cançado-2011 L_D=7 nm spectrum, published I_D/I_G = 1.6, height mode, config linear/lorentzian/DG/height (baseline = documented free variable, set to the simplest defensible linear baseline a priori, not tuned to pass). Measured I_D/I_G = 1.5227 — PASS within ±10% (window 1.44–1.76). Recorded Day 10, June 24 2026.
+  - V5b (second demonstration, AREA/integrated mode): digitized spectrum Maity et al., arXiv:1711.01957, Fig. 1(a) green fCNT curve; published integrated-area I_D/I_G = 1.64 at 514.5 nm; peak set {D, G}. Pipeline measured (area definition) I_D/I_G = 1.7136; pre-declared ±10% window [1.476, 1.804]; result: PASS. Demonstrates pipeline reproduction of a published ratio under the integrated-area definition, complementing the height-mode V5 (Cançado-2011).
 - **V6 — Cross-implementation agreement:** Independent implementations must agree
   within **1e-9 relative (analytic)** or **1e-6 relative (numerical)**.
   V6 (metrics) — Day 5 result 6/19/2026: GREEN. metrics.py vs clean-room refimpl/ref_metrics.py

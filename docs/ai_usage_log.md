@@ -771,3 +771,31 @@ Signed: Avin Gupta, 2026-06-25
 
 Signed: Avin Gupta, 2026-06-25
 
+## 2026-06-27 — Buffer day, Implementer (Gate V5b second published-spectrum demo, AREA mode) — agent session
+
+- Added a second Gate V5 demonstration, `V5b`, mirroring `_compute_v5_gate()` for
+  the integrated-AREA definition. New code in `src/ramanuq/reporting.py`:
+  module-level constants `_V5B_CONFIG` (baseline=linear, lineshape=lorentzian,
+  bwf_g=False, peak_set=DG, intensity=area) and `_V5B_SPECTRUM="fcnt_arxiv1711"`;
+  a parallel function `_compute_v5b_gate(cals, digitized_dir=...)`; and a new
+  `"V5b": _compute_v5b_gate(cals)` entry in the gates dict. The existing `"V5"`
+  entry and `_compute_v5_gate()` were left unchanged.
+- `_compute_v5b_gate` reads `data/digitized/fcnt_arxiv1711_fig1a.csv` and the
+  provenance entry id `fcnt_arxiv1711` (published_id_ig=1.64, excitation_nm=514.5),
+  runs the identical pipeline (PipelineConfig DG/lorentzian/linear, bwf_g=False,
+  n_boot=0, seed=0), and computes the ratio in AREA mode
+  (`compute_metrics(fit, cals, "area").id_ig`, rounded to 4 dp). It returns the
+  pending placeholder if the CSV or provenance is absent.
+- Computed (not typed) result: measured I_D/I_G = 1.7136, window [1.476, 1.804],
+  result PASS. The window is the fixed ±10% band around the published 1.64.
+- Regenerated `docs/report_data.json` via `write_report_data()`: the ONLY change
+  is the ADDED `gates.V5b` block; no existing value changed (self-check ok).
+- Added `tests/test_reporting_v5b.py`: asserts `gates.V5b` exists with a finite
+  `measured_idig`, `window == [1.476, 1.804]`, `result in {PASS, MISS}`, and
+  `intensity_mode == "area"`; and that `gates.V5` is still present and unchanged
+  in shape. No specific measured number is asserted beyond finiteness.
+- `python3 -m pytest -q` → 789 passed; `python3 -m ruff check .` → All checks
+  passed.
+
+Signed: ____________________ (human to sign)
+

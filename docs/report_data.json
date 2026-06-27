@@ -142,6 +142,26 @@
         1.7600000000000002
       ]
     },
+    "V5b": {
+      "citation_doi": "arXiv:1711.01957",
+      "config": "baseline=linear|lineshape=lorentzian|bwf_g=False|peak_set=DG|intensity=area",
+      "excitation_nm": 514.5,
+      "intensity_mode": "area",
+      "measured_idig": 1.7136,
+      "name": "Published-spectrum reproduction",
+      "note": "Maity et al. functionalized-CNT (fCNT) spectrum (arXiv:1711.01957), reproduced in integrated-area mode; the paper defines I_D/I_G as the integrated-area ratio. Demonstration config fixed a priori from the paper stated method (area, DG) + Lorentzian + linear baseline.",
+      "result": "PASS",
+      "source": "validation_plan.md Gate V5",
+      "spectrum": "fcnt_arxiv1711",
+      "status": "PASS",
+      "target": 1.64,
+      "tolerance": "within +/-10% of >=1 digitized published spectrum",
+      "tolerance_frac": 0.1,
+      "window": [
+        1.476,
+        1.804
+      ]
+    },
     "V6": {
       "name": "Cross-implementation agreement",
       "source": "validation_plan.md Gate V6 (metrics Day 5, selectors Day 7, mdc Day 8)",
