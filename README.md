@@ -60,4 +60,4 @@ If you use this software, please cite it using the metadata in
 ## AI-usage disclosure
 
 AI assistance on this project is logged in
-[`docs/ai_usage_log.md`](docs/ai_usage_log.md).
+[`docs/provenance/ai_usage_log.md`](docs/provenance/ai_usage_log.md).

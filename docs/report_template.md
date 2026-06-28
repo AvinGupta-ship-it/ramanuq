@@ -249,7 +249,7 @@ The protocol detects smaller changes in I_D/I_G than the naive comparator in eve
 ## 7 Protocol and disclosure checklist
 
 The per-regime protocol recommendations are in `docs/protocol.md`. The AI-usage
-disclosure is in `docs/ai_usage_log.md`.
+disclosure is in `docs/provenance/ai_usage_log.md`.
 
 <!-- AUTHOR: the disclosure checklist — write interpretive prose here -->
 I defined all four research questions — Q1, Q1b, Q2, and Q3 — before any result was generated, and I registered the Q2 prediction, with a date, before any selector code existed. Every calibration constant was sourced from the primary literature, namely Tuinstra and Koenig (1970) and Cançado et al. (2006, 2011), and I personally verified the band-intensity definition that each of those works adopted. I defined the operational ground-truth definition, the gate tolerances, and the coverage floor, all pre-registered and frozen before any result was produced. Every interpretive sentence in this report is my own, including the Q2 verdict and the protocol recommendations. The AI agents implemented code to my specifications and acceptance tests, and each science-critical formula (lineshapes, fit criteria, metrics, MDC, and selectors) was independently reimplemented by a separate agent and asserted equal in continuous integration (Gate V6). The public, dated audit trail comprises the validation_plan.md whose timestamps precede the results, the per-session ai_usage_log.md, and the Gate V6 differential.

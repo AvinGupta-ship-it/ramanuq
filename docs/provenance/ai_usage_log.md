@@ -912,3 +912,46 @@ Signed: Avin Gupta - 2026-06-27
 
 Signed: Avin Gupta - 2026-06-28
 
+## 2026-06-28 — Buffer day, Implementer (docs/ file organization toward v0.2.0) — Avin Gupta, 6/28/2026
+
+**Role:** Implementer (file relocation + path-reference plumbing only). Authored
+no interpretation; changed no number, citation, figure, or `report_data.json` value.
+
+**What this session did (facts):**
+- Created `docs/provenance/` and relocated two files into it with `git mv`
+  (history preserved, contents byte-unchanged): `docs/ai_usage_log.md` →
+  `docs/provenance/ai_usage_log.md`; `docs/progress_journal.md` →
+  `docs/provenance/progress_journal.md`. `docs/validation_plan.md` was NOT moved.
+- Consolidated the loose day-N teaching material into `docs/briefings/` with
+  `git mv`: day6/day7/day8/day9 briefing + quiz (8 files). After this, `docs/`
+  root holds no `dayN_briefing.md`/`dayN_quiz.md`.
+- Updated only the enumerated PATH references to the new provenance path (bare
+  prose mentions left unchanged): `README.md` (link text + target),
+  `docs/report_template.md`, `docs/release_notes_v0.1.0.md`. `docs/report_draft.md`
+  was regenerated from the template via `scripts/build_report.py` (not hand-edited),
+  so its disclosure path string updated automatically.
+- Verification (without RUN_FULL_STUDY; from committed parquet only):
+  `python3 -m pytest -q` → 792 passed, 0 failed (pre-existing stage-guard
+  warnings); `python3 -m ruff check .` → All checks passed.
+  `grep -rn "docs/ai_usage_log|docs/progress_journal"` over `README.md` and `docs/`
+  (excluding the moved files' own contents) → zero old-path hits.
+  Regenerated `report_data.json` + figures + `report_draft.md`: `report_data.json`
+  byte-identical to committed; figures F1–F10 (.png/.pdf) byte-identical after
+  restoring `figures/F2.pdf` to its committed bytes (regeneration reproduced the
+  same known pre-existing environment-level 1-byte deflate difference,
+  115758 → 115757, unrelated to this change). The only byte-stable content change
+  in `report_draft.md` was the ai_usage_log PATH string
+  (`docs/ai_usage_log.md` → `docs/provenance/ai_usage_log.md`). `docs/report.pdf`
+  was re-rendered to reflect the updated draft (it embeds a non-reproducible build
+  timestamp and cannot be byte-diffed).
+
+**What was NOT done:** did NOT edit the contents of `ai_usage_log.md`,
+`progress_journal.md`, or `validation_plan.md` beyond this one log append. Did NOT
+author any interpretive/finding/verdict prose. Did NOT alter any number, citation,
+constant, `report_data.json` value, or figure. Did NOT touch `protocol.md`, the Q2
+verdict, `calibrations.yaml`, the science modules, the Tier-A/B truth, or the Day-6
+parquet. Did NOT move any file not listed, delete any file, create or change any
+tag, or cut any release. Did NOT run the full crossed study. Did NOT commit or push.
+
+Signed: Avin Gupta - 2026-06-28
+
