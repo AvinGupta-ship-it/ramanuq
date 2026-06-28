@@ -23,6 +23,7 @@ The nine figures:
 - F7  MDC curves (protocol vs naive; I_D/I_G and Delta n_D)
 - F8  demonstration spectra (reads data/digitized/; raises if absent)
 - F9  rank-stability (honest empty/undefined state)
+- F10 replicate-averaging MDC curves (protocol vs naive, per SNR regime)
 """
 
 from __future__ import annotations
@@ -39,6 +40,7 @@ from matplotlib import pyplot as plt
 from . import hostile
 from .fit import PipelineConfig, fit_spectrum
 from .io import load_spectrum
+from .mdc import mdc
 from .model import build_model
 from .reporting import (
     DEFAULT_OUTPUT,
@@ -90,6 +92,8 @@ _PROTO_COV = "protocol_coverage"
 _PROTO_FAIL = "protocol_failure_rate"
 _PROTO_MDC = "protocol_mdc_idig"
 _NAIVE_MDC = "naive_mdc_idig"
+_PROTO_SIGMA = "protocol_sigma_single"
+_NAIVE_SIGMA = "naive_sigma_single"
 _T5 = "t5_ranking"
 _COV_FLOOR = "coverage_floor"
 _MAX_COV = "max_coverage"
@@ -725,12 +729,52 @@ def figure_f9(df, report):
 
 
 # --------------------------------------------------------------------------- #
+# F10 -- replicate-averaging MDC curves (protocol vs naive, per SNR regime)
+# --------------------------------------------------------------------------- #
+#: N_rep sweep for the replicate-averaging MDC curve (integers 1..10).
+F10_N_REP = tuple(range(1, 11))
+
+
+def figure_f10(df, report):
+    """MDC vs number of averaged replicates N_rep; protocol vs naive per regime.
+
+    Pure replotting of existing math: reads the per-(config, regime) single-
+    spectrum precision (``protocol_sigma_single`` / ``naive_sigma_single``)
+    recomputed in report_data.json and applies the existing
+    :func:`ramanuq.mdc.mdc` at each N_rep in 1..10 (same alpha/power defaults
+    that produced the frozen MDCs). By construction each curve at N_rep=1 equals
+    the frozen per-regime MDC, and every curve falls as 1/sqrt(N_rep).
+    """
+    snrs = list(SNR_REGIMES)
+    n_reps = list(F10_N_REP)
+    fig, axes = plt.subplots(1, len(snrs), figsize=(13, 4.2), sharey=True)
+    for ax, snr in zip(axes, snrs):
+        cell = _regime_cell(report, snr)
+        for label, sigma_key, color, marker, ls in [
+            ("protocol", _PROTO_SIGMA, _C_BLUE, "s", "-"),
+            ("naive", _NAIVE_SIGMA, _C_VERMILLION, "o", "--"),
+        ]:
+            sigma = cell[sigma_key]
+            y = [mdc(sigma, n_rep=n) for n in n_reps]
+            ax.plot(n_reps, y, marker=marker, ls=ls, color=color, label=label)
+        ax.set_xticks(n_reps)
+        ax.set_xlabel("number of averaged replicates N_rep")
+        ax.set_title(f"SNR {snr}", color=SNR_COLORS[snr])
+        ax.legend(fontsize=8)
+    axes[0].set_ylabel("MDC (I_D/I_G units)")
+    fig.suptitle("F10 — Replicate-averaging MDC: protocol vs naive",
+                 fontweight="bold")
+    fig.tight_layout(rect=[0, 0, 1, 0.95])
+    return fig
+
+
+# --------------------------------------------------------------------------- #
 # Registry / driver helpers.
 # --------------------------------------------------------------------------- #
 FIGURES = {
     "F1": figure_f1, "F2": figure_f2, "F3": figure_f3, "F4": figure_f4,
     "F5": figure_f5, "F6": figure_f6, "F7": figure_f7, "F8": figure_f8,
-    "F9": figure_f9,
+    "F9": figure_f9, "F10": figure_f10,
 }
 
 

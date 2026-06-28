@@ -33,9 +33,9 @@ from ramanuq.synth import SEED  # noqa: E402
 FIGURE_SEED = int(SEED)
 
 OUT_DIR = os.path.join(_REPO_ROOT, "figures")
-#: All nine figures are generated; F8 reads digitized spectra from
+#: All figures are generated; F8 reads digitized spectra from
 #: data/digitized/ (raises if the provenance/CSVs are absent).
-GENERATED = ["F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9"]
+GENERATED = ["F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10"]
 DEFERRED = []
 
 
@@ -54,7 +54,7 @@ def _digest(path):
 
 
 def build_all(out_dir=OUT_DIR, refresh_report=True):
-    """Render F1-F9 deterministically; return the list of written paths."""
+    """Render all figures deterministically; return the list of written paths."""
     os.makedirs(out_dir, exist_ok=True)
     viz.apply_style()
     if refresh_report:

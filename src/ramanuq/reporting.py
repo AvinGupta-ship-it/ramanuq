@@ -49,6 +49,9 @@ MATERIAL_CLASS = "synthetic_disordered_carbon"
 SNR_REGIMES = (15, 50, 200)
 CONFIG_COLUMNS = ("baseline", "lineshape", "bwf_g", "peak_set", "intensity")
 
+#: N_rep sweep for the F10 replicate-averaging MDC curve (integers 1..10).
+F10_N_REP = tuple(range(1, 11))
+
 #: The naive everyday pipeline used as the MDC contrast (Day-8 case study).
 NAIVE_CONFIG = {
     "baseline": "linear",
@@ -486,6 +489,15 @@ def compute_report_data(
         "naive_config": _config_str(NAIVE_CONFIG),
         "per_regime": {},
     }
+    # F10 replicate-averaging MDC: the SAME per-(config, regime) sigma_single and
+    # the SAME mdc() that produce the frozen N_rep=1 MDCs above, swept over
+    # N_rep 1..10. No new sigma values or constants are introduced.
+    f10_replicate_mdc = {
+        "alpha": 0.05,
+        "power": 0.8,
+        "n_rep_values": list(F10_N_REP),
+        "per_regime": {},
+    }
     for snr in SNR_REGIMES:
         regime = {"material_class": MATERIAL_CLASS, "snr_label": snr}
         proto_cfg, proto_sd, n_cand = _select_protocol_config(df, snr)
@@ -523,6 +535,11 @@ def compute_report_data(
             "n_spectra": int(n_spec),
         }
 
+        f10_replicate_mdc["per_regime"][f"SNR{snr}"] = {
+            "protocol_mdc_idig": [float(mdc(p_sigma, n_rep=n)) for n in F10_N_REP],
+            "naive_mdc_idig": [float(mdc(n_sigma, n_rep=n)) for n in F10_N_REP],
+        }
+
     report = {
         "_about": "RamanUQ v2.1 report data. Every number below is RECOMPUTED "
         "from data/synthetic/results/tierB_grid_results.parquet and the frozen "
@@ -538,6 +555,7 @@ def compute_report_data(
         "q2_audit": q2_audit,
         "t6b_coverage": t6b_coverage,
         "mdc": mdc_block,
+        "f10_replicate_mdc": f10_replicate_mdc,
     }
     return report
 

@@ -874,3 +874,41 @@ Signed: Avin Gupta - 2026-06-27
 
 Signed: Avin Gupta - 2026-06-27
 
+## 2026-06-28 — Buffer day, Implementer (v0.2.0 descope-ladder item — F10 replicate-averaging MDC curve) — agent session
+
+- Scope: added a new figure F10 (and only F10) showing the replicate-averaging
+  minimum-detectable-change (MDC) curve — MDC in I_D/I_G units vs the number of
+  averaged replicate spectra N_rep (1..10) — for the protocol config vs the naive
+  config, per SNR regime (15/50/200). Pure replotting of EXISTING math: no new
+  science, no new dependency, no new sigma values, no new constants.
+- `src/ramanuq/viz.py`: added `figure_f10` and registered it in `FIGURES`. It
+  reads the per-(config, regime) single-spectrum precision (`protocol_sigma_single`
+  / `naive_sigma_single`) recomputed in `report_data.json` and applies the EXISTING
+  `ramanuq.mdc.mdc` (same alpha=0.05/power=0.8 that produced the frozen N_rep=1
+  MDCs) swept over N_rep 1..10. Three subplots (one per SNR), colorblind-safe
+  Okabe-Ito (blue=protocol/solid/square, vermillion=naive/dashed/circle).
+- `src/ramanuq/reporting.py` (`write_report_data`/`compute_report_data`): ADDED a
+  new top-level key `f10_replicate_mdc` (per regime, per config, the MDC at each
+  N_rep 1..10) reusing the same sigma_single and `mdc()` as the frozen MDCs. No
+  existing `report_data.json` value was altered.
+- `scripts/make_all_figures.py`: added F10 to `GENERATED`.
+  `scripts/figure_qa.py`: added F10 to `FIG_SPEC` (labels + legend; exists,
+  size>threshold, byte-identical across two renders — same coverage as F1-F9).
+- `tests/test_f10.py` (new): asserts (a) every F10 curve at N_rep=1 equals the
+  frozen per-regime MDC (protocol 0.529/0.271/0.565, naive 0.745/0.763/0.703 for
+  SNR 15/50/200) to 3 dp; (b) each curve falls as 1/sqrt(N_rep) (N_rep=4 = half of
+  N_rep=1); (c) `report_data.json` carries `f10_replicate_mdc` with 10 N_rep points
+  per regime/config.
+- Verification (without RUN_FULL_STUDY; read from committed parquet only):
+  `python3 -m pytest -q` → 792 passed (789 + 3 new F10 tests), 0 failed;
+  `python3 -m ruff check .` → All checks passed; `python3 scripts/figure_qa.py` →
+  all 10 figures PASS. Regenerated `report_data.json` and all figures: F1-F9
+  (.png/.pdf) byte-identical to committed and `report_data.json` changed only by
+  the ADDED `f10_replicate_mdc` key (every existing value byte-identical). As in
+  the 2026-06-27/28 passes, regenerating `figures/F2.pdf` reproduces the same
+  pre-existing environment-level 1-byte difference (115758 → 115757) unrelated to
+  this change, so the committed F2.pdf bytes were restored/left untouched. F10.png
+  and F10.pdf are byte-identical across two consecutive renders.
+
+Signed: Avin Gupta - 2026-06-28
+

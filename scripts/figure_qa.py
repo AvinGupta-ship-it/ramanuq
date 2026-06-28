@@ -52,6 +52,7 @@ FIG_SPEC = {
     "F7": {"labels": True, "explain": "legend"},
     "F8": {"labels": True, "explain": "title"},
     "F9": {"labels": True, "explain": "text"},
+    "F10": {"labels": True, "explain": "legend"},
 }
 DEFERRED = []
 
