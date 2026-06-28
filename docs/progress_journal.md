@@ -174,3 +174,6 @@ Tagged v0.1.0 of the indexing pipeline with a Zenodo DOI; the defensible core is
 
 ## Continued Improvements - 2026-06-27
 The second V5, in integrated-area mode, reproduced the published area ratio within tolerance — and because a height ratio of the same digitized curve would land lower, this is a concrete, real-data instance of the area-vs-height divergence the project is built around, now demonstrated on published spectra under both definitions (still only a demonstration, not a precision claim).
+
+## 2026-06-28
+Fixed F1 and F3 to be more visually clear and ran repro.sh to test.
