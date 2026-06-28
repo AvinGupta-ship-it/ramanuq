@@ -298,7 +298,10 @@ def figure_f1(df, report):
     ax_c.set_xlabel("SNR regime")
     ax_c.set_ylabel("empirical 95% coverage")
     ax_c.set_title("(b) Protocol-config coverage vs nominal")
-    ax_c.legend(loc="upper right", fontsize=8)
+    # The nominal/floor reference lines sit close together near the top; place
+    # their labels in the clear center-right band so they no longer crowd the
+    # lines (the lines themselves are unchanged).
+    ax_c.legend(loc="center right", fontsize=8)
 
     fig.suptitle("F1 — Recovery parity and honest coverage", fontweight="bold")
     fig.tight_layout()
@@ -404,17 +407,24 @@ def figure_f3(df, report):
         cfg = _protocol_cfg(report, snr)
         key = tuple(cfg[c] for c in CONFIG_COLUMNS)
         proto_regimes.setdefault(key, (cfg, []))[1].append(snr)
+    # The protocol markers cluster tightly in the lower-left; stagger their
+    # labels up into the empty band above the DG row, each on a thin leader
+    # line, so the labels no longer overlap each other or run off the axis.
+    # Markers stay exactly on their (error, peak-set) positions.
+    proto_label_xytext = [(10, 34), (10, 64), (10, 94)]
     for off, (key, (cfg, snrs)) in enumerate(proto_regimes.items()):
         pr = tidy[tidy.apply(lambda r: _match(r, cfg), axis=1)]
         label = "protocol SNR" + "/".join(str(s) for s in snrs)
+        dx, dy = proto_label_xytext[off % len(proto_label_xytext)]
         for _, r in pr.iterrows():
             ax.scatter(r[_MAE], y_of[r["peak_set"]], marker="D", s=90,
                        facecolor="none", edgecolor=_C_VERMILLION,
                        linewidths=1.6, zorder=5)
             ax.annotate(label, (r[_MAE], y_of[r["peak_set"]]),
-                        textcoords="offset points",
-                        xytext=(8, -14 - 12 * off), fontsize=7,
-                        color=_C_VERMILLION)
+                        textcoords="offset points", xytext=(dx, dy),
+                        ha="left", fontsize=7, color=_C_VERMILLION,
+                        arrowprops=dict(arrowstyle="-", lw=0.6,
+                                        color=_C_VERMILLION))
 
     ax.set_xscale("log")
     ax.set_yticks(range(len(PEAK_SETS)))

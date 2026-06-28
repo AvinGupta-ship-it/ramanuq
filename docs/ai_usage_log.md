@@ -846,3 +846,31 @@ Signed: Avin Gupta - 2026-06-27
 
 Signed: Avin Gupta - 2026-06-27
 
+## 2026-06-28 — Buffer day, Implementer (v0.2.0 presentation polish — F3 & F1(b) label declutter) — agent session
+
+- Scope: presentation-only label repositioning in `src/ramanuq/viz.py` for exactly
+  two figures — F3 and F1 panel (b). No plotted data point, marker/line position,
+  axis limit, tick value, color mapping, or computed number changed;
+  `docs/report_data.json` required to stay byte-identical.
+- F3 (`figure_f3`): the two protocol-config text labels ("protocol SNR15" and
+  "protocol SNR50/200") previously overlapped each other and ran off the bottom
+  axis. Repositioned both with staggered offsets up into the empty band above the
+  DG row, each connected to its marker by a thin leader line (annotate
+  `arrowprops`). The naive/protocol MARKERS and their (error, peak-set) positions,
+  colors, and flags are unchanged; only label text placement moved.
+- F1 panel (b) (`figure_f1`): the reference-line legend ("nominal 0.95" /
+  "rank floor 0.90") sat at upper-right directly over the two closely-spaced
+  reference lines. Moved the legend to `loc="center right"` (a clear band) so the
+  labels no longer crowd the lines. The axhline values/positions are unchanged.
+- Verification: `python3 -m pytest -q` → 789 passed, 0 failed; `python3 -m ruff
+  check .` → All checks passed. Regenerated `report_data.json` and all 18 figure
+  artifacts (without RUN_FULL_STUDY): F3.png/F3.pdf and F1.png/F1.pdf changed
+  (intended); `docs/report_data.json` and every other figure (F2, F4–F9
+  .png/.pdf) byte-identical to committed; each figure byte-identical across two
+  consecutive renders (determinism preserved). As in the 2026-06-27 pass,
+  regenerating `figures/F2.pdf` reproduces the same pre-existing environment-level
+  byte difference unrelated to this change, so the committed F2.pdf bytes were left
+  untouched in the working tree.
+
+Signed: Avin Gupta - 2026-06-27
+
