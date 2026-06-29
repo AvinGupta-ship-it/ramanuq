@@ -38,7 +38,7 @@ This regenerates the figures and report numbers from the committed study results
 - Minor figure label-spacing refinements (F1 reference-line labels, F3 marker labels) are deferred to v0.1.1.
 
 ## Citation
-See CITATION.cff. DOI: (added after Zenodo minting).
+See CITATION.cff. DOI: 10.5281/zenodo.20918643 (concept DOI, resolves to latest version).
 
 ## AI usage disclosure
 Implementation - code, tests, figures, documentation - was produced by AI coding agents working to specifications, acceptance tests, and validation gates I designed; every science-critical formula was additionally re-implemented by a separate, independent agent and asserted equal in continuous integration. All scientific decisions - the research questions, the calibrations sourced from primary literature, the ground-truth definitions, the success criteria and tolerances, the pre-registered prediction, the interpretation of results, and the claims - are my own, recorded with timestamps preceding the results. A per-session AI-usage log is published in the repository (docs/provenance/ai_usage_log.md).
