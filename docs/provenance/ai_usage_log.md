@@ -1,12 +1,519 @@
 # AI Usage Log
 
-## 2026-06-22 — Day 7, Implementer (selector audit / Q2 + Gate V4) — Avin Gupta, 6/22/2026
+*Entries are ordered chronologically (oldest first). Each entry follows a uniform
+template: Role, Work performed, Decisions and clarifications, Verification, Out of
+scope (not performed), and Sign-off.*
+
+---
+
+## 2026-06-18 — Implementer (Session A): core analysis modules and tests
+
+**Role:** Implementer (Session A). Built the core analysis modules and their
+unit/behavioral tests against the contracts supplied in the session prompt.
+
+**Work performed:**
+
+Files created/edited:
+- `src/ramanuq/lineshapes.py` — area-parameterized Lorentzian/Gaussian/
+  pseudo-Voigt, height-parameterized BWF, analytic height/area helpers.
+- `src/ramanuq/io.py` — frozen `Spectrum` dataclass and validating
+  `load_spectrum`.
+- `src/ramanuq/despike.py` — rolling-median MAD z-score despiker.
+- `src/ramanuq/baseline.py` — `estimate` for linear/poly3/poly5/ALS.
+- `src/ramanuq/model.py` — `build_model` composite peak models with bounds and
+  windowed-maxima initial guesses.
+- `src/ramanuq/fit.py` — `PipelineConfig`, `fit_spectrum`, standalone `aic`/`bic`,
+  residual bootstrap with failure counting.
+- `tests/test_lineshapes.py`, `tests/test_io.py`, `tests/test_despike.py`,
+  `tests/test_baseline.py`, `tests/test_fit.py`.
+- `docs/ai_usage_log.md` — this entry.
+
+What was delegated to the AI assistant: implementation of the six modules and
+their tests to the prompt's contracts and exact public API; lint/test debugging;
+drafting this log entry and a Day-2 science briefing/quiz saved to
+`/tmp/ramanuq_day2_briefing.md`.
+
+**Decisions and clarifications:** Note for reviewer (open assumption): `model.py`
+uses standard nominal carbon-Raman band anchor positions (D, G, D-prime, D3, D4)
+as model structure to seed the +/-40 center bounds and windowed-maxima guesses.
+These are anchors, not calibrated coefficients, and are module-level/overridable.
+Flagged for sign-off.
+
+**Verification:** `ruff check .` clean; `python3 -m pytest` — 38 passed.
+
+**Out of scope (not performed):** What was NOT touched (by instruction):
+`data/calibrations/calibrations.yaml`, `docs/validation_plan.md`,
+`docs/assumptions.md`, `docs/progress_journal.md`, `docs/contracts.md`, anything
+under `refimpl/`, and `tests/test_differential_v6.py` (authored by a separate
+clean-room session). No calibration constants or literature citations were
+introduced into the implemented modules.
+
+**Sign-off:** Avin Gupta, 2026-06-18.
+
+---
+
+## 2026-06-18 — Clean-room reference implementer (Session B): independent reference + Gate V6
+
+**Role:** Clean-room reference implementer (Session B). Model: Claude Code (fresh
+session, launched in isolated folder ramanuq-cleanroom containing NO project
+source — no src/ramanuq, no .git).
+
+**Work performed:** Delegated: from the math specification ONLY, implemented
+`refimpl/ref_lineshapes.py` (Lorentzian, Gaussian, pseudo-Voigt, BWF + height/area
+helpers) and `refimpl/ref_criteria.py` (AIC, BIC), and authored
+`tests/test_differential_v6.py`.
+
+**Decisions and clarifications:** Independence: session launched fresh (not
+resumed from Session A); agent confirmed it never accessed the main repository or
+any src/ramanuq file; helper relations were derived by the agent from the
+equations, not copied. This separation is what makes the Gate V6 differential
+meaningful.
+
+**Verification:** Result: Gate V6 green — 8 tests, package vs. independent
+reference agree to 1e-9 (analytic) / 1e-6 (numeric) over 500 random inputs each.
+
+**Out of scope (not performed):** None recorded.
+
+**Sign-off:** Avin Gupta, 2026-06-18.
+
+---
+
+## 2026-06-18 — Adversarial reviewer (Session C, CX-1): instrument-module review
+
+**Role:** Adversarial reviewer (Session C, CX-1). Model: Claude Code (fresh
+session, repo, review-only — modified nothing).
+
+**Work performed:** Delegated: adversarial review of the six instrument modules
+and their tests.
+
+**Decisions and clarifications:** Findings: 2 flagged blockers, 11 nits. Resolved
+before commit: BWF q=0 division hazard (bounded/guarded), missing
+tests/test_model.py (added, 8 assertions), n_failed semantics on primary-fit
+failure (corrected). Remaining nits logged as Day-3 follow-ups; weighting scheme
+and band-anchor/width seeds intentionally left unchanged (frozen modeling
+structure).
+
+**Verification:** Review-only session; no test run recorded.
+
+**Out of scope (not performed):** Review-only — modified nothing.
+
+**Sign-off:** Reviewed and verified accurate — Avin Gupta, 2026-06-18.
+
+---
+
+## 2026-06-18 — Implementer (Session A): Tier-A synthetic truth + Gate V1
+
+**Role:** Implementer (Session A) in the main repo. Model: Claude Code (Opus 4.8).
+
+**Work performed:** Delegated: implement `src/ramanuq/synth.py` (Tier-A in-family
+synthetic generator), write the paired CSV + `*_truth.json` Tier-A suite under
+`data/synthetic/tierA/`, add `tests/test_synth.py` and the Gate V1 recovery test
+`tests/test_fit_recovery.py` (`@pytest.mark.validation`), and a deterministic
+realism-plot script `scripts/render_tierA.py`.
+
+What this session did:
+- Implemented `synth.py`: bands rendered via `ramanuq.lineshapes`
+  (area-parameterized); ground truth computed DIRECTLY from the noiseless,
+  baseline-free analytic band functions (area = the `area` parameter / integral;
+  height = the analytic maximum) — never read off a fitted or noisy curve. Each
+  truth JSON stores all generator parameters, the seed, and BOTH labelled ratios
+  `true_id_ig_area` and `true_id_ig_height`. All randomness derives from one
+  project constant `SEED`.
+- Enumerated the suite per the frozen decisions (see below): 5 noise-free
+  recovery cases (stage-1 x 4 area ratios {0.1,0.5,1.0,2.0}; stage-2 x 1 at ratio
+  1.0) + 45 noisy factorial (stage-1 ratio(4) x baseline(3) x SNR(3) = 36;
+  stage-2 baseline(3) x SNR(3) = 9) = 50 cases. 50 CSV + 50 `*_truth.json` +
+  `manifest.csv` written.
+- Gate V1 (`test_fit_recovery.py`) recovers via the REAL fitter
+  (`fit.fit_spectrum`/`PipelineConfig`) — no fitting logic duplicated; bands are
+  identified by nearest fitted center to each true center to resolve lmfit's
+  label permutation. Stage-1 per-case worst relative error 7.86e-8 (gate 1e-3).
+
+**Decisions and clarifications:**
+
+Two structural conflicts were found, reported to the human, and resolved only
+with explicit approval (no gate weakened, no tolerance/pre-registration changed):
+- Conflict A (baseline): `fit_spectrum` always subtracts an estimated baseline
+  and had no zero option, biasing baseline-free recovery ~0.02–6% (> the 0.1%
+  gate). APPROVED additive Day-2 edit: added `baseline_method="none"` (returns an
+  all-zero array) to `baseline.py`, used ONLY by the Gate V1 recovery path.
+  Constraints met: linear/poly3/poly5/als behavior unchanged; `none` NOT added to
+  any studied baseline grid (Q1 science untouched); existing baseline tests pass
+  unchanged; Gate V6 differential re-run and green; V1 tolerance unchanged at
+  < 0.1%; the `none` option documented in the `baseline.py` docstring.
+- Conflict B (stage-2 mixed family): stage-2 truth mixes Lorentzian D/G with
+  Gaussian D3/D4, but `fit_spectrum` applies one lineshape to all bands, so no
+  matched fit exists (~41% I_D/I_G residual even with a perfect baseline).
+  APPROVED scope: Gate V1 per-case < 0.1% covers stage-1 only; stage-2
+  spectra+truth are still generated and committed (Gaussian D3/D4 unchanged) for
+  later gates. The exclusion and its measured residual are documented in
+  `test_fit_recovery.py`.
+
+Frozen decisions confirmed with the human before coding (docs were silent):
+stage-2 D/G = Lorentzian (default); area-ratio sweep is stage-1 only, stage-2
+fixed at 1.0; cosmic spikes implemented as a generator toggle but NOT crossed as
+a suite dimension; satellite scaling ("15% of D", "30% of G") interpreted as AREA
+fraction.
+
+**Verification:** `ruff check .` clean; full suite `python3 -m pytest` — 270
+passed; Gate V1 `pytest tests/test_fit_recovery.py -v -m validation` — 6 passed.
+Realism plots: `data/synthetic/tierA/figures/tierA_stage1_r1p0_noiseless.png`,
+`data/synthetic/tierA/figures/tierA_stage2_r1p0_noiseless.png`.
+
+**Out of scope (not performed):** This session did NOT make the human realism
+judgement (only produced the two labelled PNGs for inspection); did NOT alter
+`data/calibrations/calibrations.yaml`, the Q2 prediction, or any pre-registered
+tolerance; did NOT create any Tier-B spectra; did NOT introduce any literature
+constant; and did NOT change Day-2 math to force recovery (the `none` baseline is
+an additive no-op approved by the human, not a change to any estimator or to the
+fit).
+
+**Sign-off:** Reviewed and approved — Avin Gupta, 2026-06-18.
+
+---
+
+## 2026-06-18 — Implementer (Session A): Tier-B hostile suite + Gate V2
+
+**Role:** Implementer (Session A). Executed the frozen Day 4 contract: finalized
+Gate V2, built the out-of-family Tier-B generator + tests, and produced the human
+realism-gate plots. No science, pre-registration, or tolerance was changed.
+
+**Work performed:**
+
+Files created/edited:
+- `src/ramanuq/hostile.py` — Tier-B out-of-family generator. Band constructors
+  `composite_band` (3–7 jittered narrow Lorentzians → non-Lorentzian aggregate),
+  `emg_band` (Gaussian core convolved with a one-sided exponential of constant
+  `tau` → asymmetric), `mixed_voigt_band` (per-band `eta`), and `gp_baseline`
+  (a smooth random baseline = broad random Gaussians + a decaying exponential;
+  severities `none|mild|strong`). The name `gp_baseline` is a label only — it is
+  NOT a Gaussian-process regressor and imports no GP/sklearn library.
+  `generate(case, seed)` and `suite(out_dir, seed)` write the full crossing.
+- `tests/test_hostile.py` — generator-contract tests (determinism, truth-schema
+  completeness, finiteness, monotonic axis, parseable one-to-one filenames, full
+  90-cell coverage, physically valid params, both truth definitions, baseline
+  severity metadata, out-of-family proof, Tier-A untouched, no Day-5 scope).
+- `tests/test_baseline.py` — added Gate V2 (`@pytest.mark.validation`) and a
+  despike-no-op/idempotence test on clean (spike-free) input; existing tests kept.
+- `scripts/render_tierB.py` — renders four representative Tier-B PNGs.
+- `data/synthetic/tierB/` — 90 CSV + 90 `*_truth.json` + `manifest.csv` + figures.
+
+Tier-B truth. True intensities come only from the noiseless, baseline-free band
+callables, computed BEFORE baseline and noise: `true_id_ig_area` is the numeric
+integral (trapezoid) of D over G; `true_id_ig_height` is `max(D)/max(G)`. For the
+composite D band, height truth is the max of the SUMMED callable, not the sum of
+sub-peak heights. Both definitions are stored in every truth JSON, along with all
+band parameters (sub-peak centers/widths/areas/heights, EMG `tau`, per-band
+`eta`), the baseline parameters + severity label, the seed, and the
+generator-family labels. Truth is never read back off the observed curve.
+
+Suite & determinism. Full crossing {stage1, stage2} × {none, mild, strong} × SNR
+{200, 50, 15} × 5 instances = 90 spectra exactly. A single project seed
+(`hostile.SEED`, shared with `synth.SEED`) feeds all randomness; per-case
+randomness derives from `SeedSequence([SEED, crc32(case_id)])`, so cases are
+independent yet reproducible. CSV columns `shift_cm-1,intensity` and the
+`{stem}.csv` ↔ `{stem}_truth.json` naming reuse the Day-3 conventions; case_ids
+encode stage/severity/SNR/instance.
+
+Out-of-family proof. `test_composite_and_emg_bands_are_out_of_family` fits the
+best *independent* single Lorentzian (scipy least-squares) to each composite D
+and EMG G band and asserts relative RMS residual > 1%. Measured worst-case
+margins: composite ≈ 5.1%, EMG ≈ 15.6% (both well above 1%). This proves
+out-of-family without any claim of physical realism.
+
+**Decisions and clarifications:** Gate V2 (pre-registered, 2% of G-band height,
+UNCHANGED). Finalized as a peak-free truth construction: a noiseless spectrum that
+is only the Tier-A baseline curve (no peaks), so baseline-estimation quality is
+isolated from peak confounding; the reference is the stage-1 analytic G-band
+height. One genuine ambiguity in the original V2 entry — the method→baseline
+pairing — was surfaced to the human BEFORE implementation (measured: `linear`
+10.5% and `poly3` 1.97% on `strong_curved`, so a literal full cross-product is
+unpassable without weakening the frozen 2%). The human fixed the in-class pairing
+and recorded it in `validation_plan.md`: `linear` graded on `none` only (a
+straight line cannot represent a curved background); `poly3/poly5/als` graded on
+all three severities (`none`, `mild_cubic`, `strong_curved`). Gate V2 implements
+exactly that pairing; the 2% tolerance is unchanged. All 10 graded (method,
+baseline) pairs pass.
+
+**Verification:** `ruff check .` clean; full suite `python3 -m pytest -q` — 746
+passed; Gate V2 `pytest tests/test_baseline.py -v` — 19 passed (10 V2 pairs +
+guard + despike + finiteness); validation marker `pytest -m validation` — 25
+passed; `tests/test_hostile.py` — 462 passed. Realism plots (4):
+`data/synthetic/tierB/figures/tierB_stage1_blnone_snr200_i0.png`,
+`tierB_stage1_blstrong_snr15_i2.png`, `tierB_stage2_blmild_snr50_i1.png`,
+`tierB_stage2_blstrong_snr15_i3.png`.
+
+**Out of scope (not performed):** This session did NOT make the human Tier-B
+realism judgement (only produced the four labelled PNGs for inspection); did NOT
+alter `data/calibrations/calibrations.yaml`, the Q2 prediction, or anything in
+`validation_plan.md` (the in-class V2 pairing note was written by the human); did
+NOT change any pre-registered tolerance; did NOT modify Tier-A data; did NOT
+change Day-2 math (lineshapes/model/fit/baseline/despike) to force any result;
+did NOT change Day-3 truth values; did NOT create any Day-5 metric/calibration
+code; did NOT introduce any literature constant; did NOT begin any Q1/Q2/Q3 study
+or grid work; and did NOT implement a real Gaussian-process baseline.
+
+**Sign-off:** Reviewed and verified accurate — Avin Gupta, 2026-06-18.
+
+---
+
+## 2026-06-19 — Implementer (Session A): metrics + calibration wiring
+
+**Role:** Implementer (Session A). Executed the frozen Day 5 contract: built the
+calibration loader, the `Metrics` container, and `compute_metrics`, wrote
+`docs/calibration_provenance.md` and `tests/test_metrics.py`. All scientific
+decisions — the hand-pin numbers, the calibration constants/equations, the
+intensity-definition matching, and the stage-guard thresholds — are the human's
+and were taken as-is from `data/calibrations/calibrations.yaml`. No
+pre-registration, Q2 prediction, tolerance, or truth file was touched.
+
+**Work performed:**
+
+Files created/edited:
+- `src/ramanuq/metrics.py` — `load_calibrations(path)` validates per-calibration
+  provenance (non-empty `citation`, `doi`, `validity`, `intensity_definition`),
+  treats `stage_guard` as the only permitted non-calibration top-level key,
+  raises (never silently skips) on any other top-level entry lacking
+  `intensity_definition`, and parses constant strings to float (raising, never
+  defaulting, on unparseable values; `"n/a"` denotes no project constant). A
+  frozen `Metrics` dataclass with the contract field list. `compute_metrics(fit,
+  calibrations, definition)` reads every constant and the wavelength from the
+  loaded YAML / `fit.meta["wavelength_nm"]`; no calibration constant is
+  hard-coded. Each calibration is fed the ratio under its own declared intensity
+  definition (Cançado 2006 → area, Cançado 2011 → height), classified from the
+  YAML `intensity_definition` field. `la_tk` and `l_d` are intentional NaN with
+  flags. The stage guard suppresses the calibrated quantities (but not `id_ig`)
+  to NaN, flags the reason, and warns.
+- `src/ramanuq/fit.py` — one-line, numerically/scientifically neutral addition:
+  `meta["wavelength_nm"] = float(spec.wavelength_nm)` so `FitResult` carries the
+  excitation wavelength that `compute_metrics` consumes. No fit math, gate, or
+  tolerance changed (decision confirmed with the human before editing).
+- `docs/calibration_provenance.md` — summary of provenance already in the YAML
+  (citation, DOI, access date, equation, constant + units + uncertainty,
+  intensity definition, validity), plus notes that `la_tk`/`l_d` are intentional
+  NaN and that the stage-guard thresholds are documented assumptions. No source
+  fact not already in the YAML was introduced.
+- `tests/test_metrics.py` — hand-pin (532 nm, ratios == 1 → `la ==
+  19.2246202982`, `n_d == 2.2471185038e11`), constant-uncertainty propagation,
+  intensity-definition wiring (area/height not swapped), stage guard fires (both
+  conditions; G-only, no D3) and does not false-fire, provenance-validation
+  raises (missing citation/doi/intensity_definition against tmp copies),
+  no-hard-coded-constants source scan, and interval sanity.
+- `data/calibrations/calibrations.yaml` — fixed ONE stray trailing double-quote
+  (`stage-1.""` → `stage-1."`) at EOF that prevented the file from parsing at
+  all. Pure YAML-syntax fix; no scientific content (constants, equations,
+  citations, definitions, thresholds) was altered. The `2.4-e10`→`2.4e-10`
+  correction and the `stage_guard` block were already present in the working tree
+  (human edits).
+
+FitResult fields read. Areas/FWHMs from `fit.best["D_area"]`, `best["G_area"]`,
+`best["D_fwhm"]`, `best["G_fwhm"]`; optional D3 from `best["D3_area"]` (guard's D3
+condition skipped when absent). Bootstrap rows from `fit.bootstrap_df` (same
+column names). Wavelength from `fit.meta["wavelength_nm"]`. Height-from-area via
+`lineshapes.lorentzian_height_from_area`.
+
+**Decisions and clarifications:** All scientific decisions — the hand-pin
+numbers, the calibration constants/equations, the intensity-definition matching,
+and the stage-guard thresholds — are the human's and were taken as-is from
+`data/calibrations/calibrations.yaml`. The one-line `fit.py` meta addition was
+confirmed with the human before editing.
+
+**Verification:** `python3 -m ruff check .` — clean. `python3 -m pytest
+tests/test_metrics.py -v` — 11 passed. Hand-pin, constant-uncertainty,
+definition-wiring, both stage-guard fire cases, no-false-fire, all three
+provenance-raise cases, no-hard-coded-constants scan, and interval sanity all
+green. `tests/test_fit.py`, `tests/test_fit_recovery.py`, `tests/test_smoke.py`
+still pass (11) after the one-line `fit.py` meta addition.
+
+**Out of scope (not performed):** This session did NOT change the hand-pin
+numbers (the human's); did NOT alter calibrations.yaml scientific content (only
+fixed one stray quote so it parses); did NOT modify Tier-A or Tier-B truth files;
+did NOT touch `validation_plan.md`, the Q2 prediction, or any
+pre-registration/tolerance; did NOT hard-code any calibration constant (a source
+scan in the tests enforces this); did NOT edit `tests/test_differential_v6.py` or
+do any V6 work; and did NOT begin any Day-6+ work (no grid.py, selectors.py,
+mdc.py, robust.py, viz.py, reporting.py).
+
+**Sign-off:** Avin Gupta, 2026-06-19.
+
+---
+
+## 2026-06-20 — Implementer: ALS baseline robustness fix (pre-grid)
+
+**Role:** Implementer. Hardened the ALS baseline against an
+environment-dependent non-finite result that turned GitHub Actions (Python 3.11 /
+Linux) red while the suite stayed green locally (Python 3.14 / macOS).
+
+**Work performed:**
+
+Defect: `tests/test_fit.py::test_fit_never_raises_on_degenerate_input` feeds a
+perfectly flat spectrum (all-zero intensity). In `_als_baseline`, the first solve
+returns `z = 0`; the asymmetric weight update `p*(y>z) + (1-p)*(y<z)` then drives
+*every* weight to zero (no point is strictly above or below the smooth). The next
+iteration's system collapses to `lam * DᵀD`, which is rank-deficient by two (its
+null space is the constant and linear ramps) and therefore exactly singular.
+`spsolve` on that singular matrix returns non-finite values on the Linux LAPACK
+backend (macOS happens to return finite), tripping the finite-value guard, which
+correctly raised `ValueError` — violating the `fit.py` contract that
+`fit_spectrum` must never raise on degenerate input.
+
+Fix (src/ramanuq/baseline.py only): Added a tiny fixed diagonal ridge
+(`_ALS_RIDGE = 1e-9`, applied as `wmat + dtd + ridge`) so the normal-equations
+matrix is always positive-definite and the solve is finite on every backend. On
+well-conditioned inputs the weights are always p (0.01) or 1−p (0.99), so the
+system is already PD and the ridge — many orders below the smallest weight — does
+not measurably perturb the fit. The `(baseline, diagnostics)` signature and
+diagnostics contents are unchanged.
+
+**Decisions and clarifications:** None recorded.
+
+**Verification:** `test_fit_never_raises_on_degenerate_input` PASSES; full suite
+763 passed / 0 failed; all 29 `-m validation` gates (V1/V2/V6) still pass; `ruff
+check .` clean. A direct check confirmed `baseline.estimate(flat_spectrum,
+method="als")` now returns an all-finite array (and exactly zeros for the flat
+input), and a normal ALS fit remains finite.
+
+**Out of scope (not performed):** No test was changed, loosened, or deleted; no
+tolerance was weakened; no other `src` module, `fit.py`, `metrics.py`,
+`calibrations.yaml`, any Tier-A/Tier-B truth file, `validation_plan.md`, or any
+other doc/pre-registration was edited. No science, data, or calibration constant
+was altered. No Day-6 work was begun (no grid.py, robust.py, or any new module).
+The finite-value guard that raises was left intact — the solver was fixed so it
+no longer produces non-finite values in the first place.
+
+**Sign-off:** Avin Gupta, 2026-06-20.
+
+---
+
+## 2026-06-20 — Implementer (Session A): configuration-grid study + Q1b jackknife + Gate V3
+
+**Role:** Implementer (Session A). Executed the frozen Day 6 contract (prompts P6
+then P7).
+
+**Work performed:**
+
+What was implemented:
+- `src/ramanuq/grid.py`: frozen `RESULT_COLUMNS` schema; `default_grid()`
+  (factorial over baseline × lineshape × bwf_g × peak_set × intensity, with
+  `bwf_g=True` emitted only for `lineshape=="lorentzian"` — 96 configurations);
+  `run_grid()` (fit + `compute_metrics` with the matching intensity definition,
+  never raising on a failed fit); `run_study()` (Tier-B suite run, truth join on
+  `case_id` selecting the matched-definition truth, `error`/`abs_error`, writes
+  parquet + csv to `data/synthetic/results/`); `decompose()` (explicitly
+  DESCRIPTIVE / non-causal spread summary); `rank_configurations()` (Q1 ranking
+  rule — RMSE-ascending order with coverage-floor and failure-rate eligibility
+  gates read from the plan as named constants).
+- `src/ramanuq/robust.py`: `jackknife_ranking()` (Q1b leave-one-out over
+  configuration families and suite instances; per-regime top-quartile retention,
+  rank IQR, and flip flag for the protocol-recommended config).
+- Tests: `tests/test_grid.py` (grid build/constraint, exact-schema, ranking
+  eligibility, DESCRIPTIVE-label, **Gate V3** `@pytest.mark.validation` with
+  `V3_BIAS_TOL = 0.05` citing Section 1, and the RESULT_COLUMNS schema-freeze
+  scan of downstream modules); `tests/test_robust.py` (fabricated frames with
+  stability known by construction — one dominant config pinned to retention 1.0
+  / no flip, one near-tie pinned to a flip).
+
+**Decisions and clarifications:**
+
+One clarification requested and granted (recorded for provenance):
+- Gate V3 "mean absolute bias": confirmed the metric is `|mean signed error|`
+  (systematic offset), graded per intensity definition with class key
+  `(lineshape, baseline, peak_set, intensity)` — area-ratio and height-ratio
+  truths are distinct physical quantities and are not pooled. Tolerance (0.05),
+  slice (`stage1` & `snr50`), and class factors were read from the plan, not
+  invented.
+
+One protected-test edit, explicitly authorized (recorded for provenance):
+- `tests/test_hostile.py::test_no_day5_scope_added`: dropped `grid` and `robust`
+  from `_DAY5_STUBS` (leaving `mdc`, `reporting`, `selectors`, `viz`), mirroring
+  the earlier removal of `metrics`. The guard protects modules not yet due;
+  grid/robust are due on Day 6, so they legitimately come off. No other change to
+  that test; no tolerance, assertion, or remaining-stub protection was weakened.
+
+**Out of scope (not performed):** Did NOT read the Q2 prediction (Section 5 /
+T1.6 of `validation_plan.md` was never opened — only Sections 1–4 were read). Did
+NOT alter any pre-registration content, tolerance, the ranking rule, the coverage
+floor, or the failure cap. Did NOT modify any Tier-A or Tier-B truth file,
+`calibrations.yaml` or any `data/` input, `metrics.py`, `fit.py`, `lineshapes.py`,
+or any existing `src` module other than creating `grid.py` and `robust.py`. Did
+NOT begin any Day-7+ work (no `selectors.py`, `mdc.py`, `viz.py`, `reporting.py`,
+no figures, no notebooks). Did NOT commit or push.
+
+**Sign-off:** Reviewed and signed: Avin Gupta, 2026-06-21. Confirmed accurate:
+agents implemented grid.py/robust.py and the Day-6 tests and generated the
+analysis from existing study data; I personally inspected the ranking, ruled that
+the empty ranking is the faithful pre-registered result (rule and floor
+unchanged), and performed the spot-recompute. No agent authored my
+interpretation, changed my pre-registration, or read the Q2 prediction.
+
+---
+
+## 2026-06-21 — Analyst: configuration-grid analysis outputs
+
+**Role:** Analyst. Generated the Day-6 analysis outputs from the ALREADY-RUN
+Tier-B grid study. The study was NOT re-run; the existing
+`data/synthetic/results/tierB_grid_results.parquet` (8640 rows, 6480 valid
+errors) was loaded and the already-implemented `grid`/`robust` functions were
+called as-is.
+
+**Work performed:**
+
+What was generated (`scripts/day6_analysis.py`, a new analysis-only script):
+- Q1 ranking (T5) via `grid.rank_configurations(df, 0.90, 0.05)`, DESCRIPTIVE
+  spread via `grid.decompose(df)`, and the Q1b stability table (T9) via
+  `robust.jackknife_ranking(df, 0.90, 0.05)`.
+- Table fragments `data/synthetic/results/t5_ranking.csv`, `t9_stability.csv`,
+  `v3_classes.csv`, `config_cell_accounting.csv`, and the report fragments
+  `day6_report_data.json`.
+- Plain-language briefing `docs/day6_briefing.md` and self-check
+  `docs/day6_quiz.md`.
+
+Faithful headline finding: under the pre-registered 0.90 coverage floor (== V1b
+lower bound), NO configuration is rank-eligible in any SNR regime — max empirical
+95% coverage across all 288 (config × regime) cells is 0.80, below the floor. So
+`rank_configurations` (T5) and `jackknife_ranking` (T9) return EMPTY tables, and
+Q1b is vacuous (no recommended config to jackknife). This was verified to be the
+genuine study result (the bootstrap statistical intervals undercover on hostile
+non-Lorentzian spectra), not a misuse — the ranking rule and floors were used
+exactly as written and not modified. The RMSE-ordering leaders are recorded
+descriptively and clearly labelled NOT rank-eligible.
+
+Three pre-registered questions answered: (a) spread sigma_meth/RMSE is larger on
+strong-baseline cases (0.887) than mild (0.866) or none (0.840); (b) +D′ strata
+are NOT flagged for failures — failure rate is identical (0.25) across all peak
+sets because failures come from `bwf_g=True`, not D′ (D′ does worsen error, not
+failures); (c) no rank-1 config exists, so rank stability is undefined, not
+"stable".
+
+**Decisions and clarifications:** None recorded.
+
+**Verification:** Gate V3 re-confirmed PASS from the study data: on the
+stage1/SNR50 slice, 9 of 72 (lineshape, baseline, peak_set, intensity) classes
+achieve mean absolute bias < 0.05 (best: pseudo_voigt·poly5·DG·area = 0.0052). V3
+is a bias gate, independent of the coverage floor that empties the ranking.
+
+**Out of scope (not performed):** Did NOT re-run the study (`run_study`
+untouched). Did NOT read the Q2 prediction — Section 5 / "Q2 Prediction (T1.6)" of
+`validation_plan.md` was never opened; only Sections 1–4 were read. Did NOT modify
+`grid.py`, `robust.py`, any test, `calibrations.yaml`, any `data/` file, any
+Tier-A/Tier-B truth JSON, `metrics.py`, or `fit.py`. Did NOT alter any
+pre-registration content, tolerance, the ranking rule, the coverage floor, or the
+failure cap. Did NOT begin any Day-7+ work (no `selectors.py`, `mdc.py`, `viz.py`,
+`reporting.py`, no figures). Did NOT commit or push.
+
+**Sign-off:** Avin Gupta, 2026-06-21.
+
+---
+
+## 2026-06-22 — Implementer: selector audit (Q2) + Gate V4
 
 **Role:** Implementer. Built the Q2 selector-audit machinery and its validation
 gate from the frozen grid results; authored no interpretation and read no
 prediction.
 
-**What this session implemented:**
+**Work performed:**
+
+What this session implemented:
 - `src/ramanuq/selectors.py`:
   - `score_configs(selector_values, abs_errors)` — the per-config-set primitive
     (the unit the clean-room reference mirrors): average-rank Spearman rho
@@ -55,422 +562,53 @@ prediction.
   viz.py)` placeholder (no `viz` import, no figure), and ends with an empty
   `Verdict (author writes this)` cell. No prose interpreting results anywhere.
 
-**One scope-guard maintenance (Day-6 precedent for grid/robust):**
-- `tests/test_hostile.py::_DAY5_STUBS`: removed only `selectors` (now due on
-  Day 7), leaving `mdc`, `reporting`, `viz` (Day-9 deferred) still guarded as
-  must-stay stubs. No assertion, tolerance, or other stub protection weakened.
+**Decisions and clarifications:** One scope-guard maintenance (Day-6 precedent
+for grid/robust): `tests/test_hostile.py::_DAY5_STUBS`: removed only `selectors`
+(now due on Day 7), leaving `mdc`, `reporting`, `viz` (Day-9 deferred) still
+guarded as must-stay stubs. No assertion, tolerance, or other stub protection
+weakened.
 
-**What was NOT done:** did NOT read or reference the Q2 prediction
-(`docs/validation_plan.md` Section 5) — that file was never opened. Did NOT
-alter the pre-registration or any tolerance/gate. Did NOT modify any protected
-file (`metrics.py`, `grid.py`, anything under `data/synthetic/results/`,
+**Out of scope (not performed):** Did NOT read or reference the Q2 prediction
+(`docs/validation_plan.md` Section 5) — that file was never opened. Did NOT alter
+the pre-registration or any tolerance/gate. Did NOT modify any protected file
+(`metrics.py`, `grid.py`, anything under `data/synthetic/results/`,
 `data/synthetic/tierA/`, `data/synthetic/tierB/`, or `calibrations.yaml`). Did
-NOT create or modify `viz.py`, `mdc.py`, or `reporting.py` (F5 deferred to
-Day 9). Did NOT begin any Day-8+ work. Did NOT commit or push.
+NOT create or modify `viz.py`, `mdc.py`, or `reporting.py` (F5 deferred to Day 9).
+Did NOT begin any Day-8+ work. Did NOT commit or push.
 
-## 2026-06-21 — Day 6, Analyst — Avin Gupta, 6/21/2026
-
-**Role:** Analyst. Generated the Day-6 analysis outputs from the
-ALREADY-RUN Tier-B grid study. The study was NOT re-run; the existing
-`data/synthetic/results/tierB_grid_results.parquet` (8640 rows, 6480 valid
-errors) was loaded and the already-implemented `grid`/`robust` functions were
-called as-is.
-
-**What was generated (`scripts/day6_analysis.py`, a new analysis-only script):**
-- Q1 ranking (T5) via `grid.rank_configurations(df, 0.90, 0.05)`,
-  DESCRIPTIVE spread via `grid.decompose(df)`, and the Q1b stability table (T9)
-  via `robust.jackknife_ranking(df, 0.90, 0.05)`.
-- Table fragments `data/synthetic/results/t5_ranking.csv`,
-  `t9_stability.csv`, `v3_classes.csv`, `config_cell_accounting.csv`, and the
-  report fragments `day6_report_data.json`.
-- Plain-language briefing `docs/day6_briefing.md` and self-check
-  `docs/day6_quiz.md`.
-
-**Faithful headline finding:** under the pre-registered 0.90 coverage floor
-(== V1b lower bound), NO configuration is rank-eligible in any SNR regime —
-max empirical 95% coverage across all 288 (config × regime) cells is 0.80,
-below the floor. So `rank_configurations` (T5) and `jackknife_ranking` (T9)
-return EMPTY tables, and Q1b is vacuous (no recommended config to jackknife).
-This was verified to be the genuine study result (the bootstrap statistical
-intervals undercover on hostile non-Lorentzian spectra), not a misuse — the
-ranking rule and floors were used exactly as written and not modified. The
-RMSE-ordering leaders are recorded descriptively and clearly labelled NOT
-rank-eligible.
-
-**Gate V3 re-confirmed PASS** from the study data: on the stage1/SNR50 slice,
-9 of 72 (lineshape, baseline, peak_set, intensity) classes achieve mean
-absolute bias < 0.05 (best: pseudo_voigt·poly5·DG·area = 0.0052). V3 is a bias
-gate, independent of the coverage floor that empties the ranking.
-
-**Three pre-registered questions answered:** (a) spread sigma_meth/RMSE is
-larger on strong-baseline cases (0.887) than mild (0.866) or none (0.840);
-(b) +D′ strata are NOT flagged for failures — failure rate is identical (0.25)
-across all peak sets because failures come from `bwf_g=True`, not D′ (D′ does
-worsen error, not failures); (c) no rank-1 config exists, so rank stability is
-undefined, not "stable".
-
-**What was NOT done:** did NOT re-run the study (`run_study` untouched). Did
-NOT read the Q2 prediction — Section 5 / "Q2 Prediction (T1.6)" of
-`validation_plan.md` was never opened; only Sections 1–4 were read. Did NOT
-modify `grid.py`, `robust.py`, any test, `calibrations.yaml`, any `data/` file,
-any Tier-A/Tier-B truth JSON, `metrics.py`, or `fit.py`. Did NOT alter any
-pre-registration content, tolerance, the ranking rule, the coverage floor, or
-the failure cap. Did NOT begin any Day-7+ work (no `selectors.py`, `mdc.py`,
-`viz.py`, `reporting.py`, no figures). Did NOT commit or push.
-
-## 2026-06-18 — Day 2, Implementer (Session A) — Avin Gupta, 6/18/2026
-
-**Role:** Implementer (Session A). Built the core analysis modules and their
-unit/behavioral tests against the contracts supplied in the session prompt.
-
-**Files created/edited:**
-- `src/ramanuq/lineshapes.py` — area-parameterized Lorentzian/Gaussian/
-  pseudo-Voigt, height-parameterized BWF, analytic height/area helpers.
-- `src/ramanuq/io.py` — frozen `Spectrum` dataclass and validating
-  `load_spectrum`.
-- `src/ramanuq/despike.py` — rolling-median MAD z-score despiker.
-- `src/ramanuq/baseline.py` — `estimate` for linear/poly3/poly5/ALS.
-- `src/ramanuq/model.py` — `build_model` composite peak models with bounds and
-  windowed-maxima initial guesses.
-- `src/ramanuq/fit.py` — `PipelineConfig`, `fit_spectrum`, standalone `aic`/`bic`,
-  residual bootstrap with failure counting.
-- `tests/test_lineshapes.py`, `tests/test_io.py`, `tests/test_despike.py`,
-  `tests/test_baseline.py`, `tests/test_fit.py`.
-- `docs/ai_usage_log.md` — this entry.
-
-**What was delegated to the AI assistant:** implementation of the six modules
-and their tests to the prompt's contracts and exact public API; lint/test
-debugging; drafting this log entry and a Day-2 science briefing/quiz saved to
-`/tmp/ramanuq_day2_briefing.md`.
-
-**What was NOT touched (by instruction):** `data/calibrations/calibrations.yaml`,
-`docs/validation_plan.md`, `docs/assumptions.md`, `docs/progress_journal.md`,
-`docs/contracts.md`, anything under `refimpl/`, and `tests/test_differential_v6.py`
-(authored by a separate clean-room session). No calibration constants or
-literature citations were introduced into the implemented modules.
-
-**Verification:** `ruff check .` clean; `python3 -m pytest` — 38 passed.
-
-**Note for reviewer (open assumption):** `model.py` uses standard nominal
-carbon-Raman band anchor positions (D, G, D-prime, D3, D4) as model structure to
-seed the +/-40 center bounds and windowed-maxima guesses. These are anchors, not
-calibrated coefficients, and are module-level/overridable. Flagged for sign-off.
-
-### Day 2 — Session B (clean-room reference implementer) — 2026-06-18
-Model: Claude Code (fresh session, launched in isolated folder ramanuq-cleanroom containing NO project source — no src/ramanuq, no .git).
-Delegated: from the math specification ONLY, implemented refimpl/ref_lineshapes.py (Lorentzian, Gaussian, pseudo-Voigt, BWF + height/area helpers) and refimpl/ref_criteria.py (AIC, BIC), and authored tests/test_differential_v6.py.
-Independence: session launched fresh (not resumed from Session A); agent confirmed it never accessed the main repository or any src/ramanuq file; helper relations were derived by the agent from the equations, not copied. This separation is what makes the Gate V6 differential meaningful.
-Result: Gate V6 green — 8 tests, package vs. independent reference agree to 1e-9 (analytic) / 1e-6 (numeric) over 500 random inputs each.
-
-### Day 2 — Session C (adversarial reviewer, CX-1) — 2026-06-18
-Model: Claude Code (fresh session, repo, review-only — modified nothing).
-Delegated: adversarial review of the six instrument modules and their tests.
-Findings: 2 flagged blockers, 11 nits. Resolved before commit: BWF q=0 division hazard (bounded/guarded), missing tests/test_model.py (added, 8 assertions), n_failed semantics on primary-fit failure (corrected). Remaining nits logged as Day-3 follow-ups; weighting scheme and band-anchor/width seeds intentionally left unchanged (frozen modeling structure).
-
-Reviewed and verified accurate — Avin Gupta, 2026-06-18
-
-### Day 3 — Session A (Tier-A truth + Gate V1 implementer) — 2026-06-18. Reviewed and approved — AG, 2026-06-18.
-Model: Claude Code (Opus 4.8), implementer in the main repo.
-Delegated: implement `src/ramanuq/synth.py` (Tier-A in-family synthetic generator),
-write the paired CSV + `*_truth.json` Tier-A suite under `data/synthetic/tierA/`,
-add `tests/test_synth.py` and the Gate V1 recovery test `tests/test_fit_recovery.py`
-(`@pytest.mark.validation`), and a deterministic realism-plot script
-`scripts/render_tierA.py`.
-
-What this session did:
-- Implemented `synth.py`: bands rendered via `ramanuq.lineshapes` (area-parameterized);
-  ground truth computed DIRECTLY from the noiseless, baseline-free analytic band
-  functions (area = the `area` parameter / integral; height = the analytic maximum) —
-  never read off a fitted or noisy curve. Each truth JSON stores all generator
-  parameters, the seed, and BOTH labelled ratios `true_id_ig_area` and
-  `true_id_ig_height`. All randomness derives from one project constant `SEED`.
-- Enumerated the suite per the frozen decisions (see below): 5 noise-free recovery
-  cases (stage-1 x 4 area ratios {0.1,0.5,1.0,2.0}; stage-2 x 1 at ratio 1.0) + 45
-  noisy factorial (stage-1 ratio(4) x baseline(3) x SNR(3) = 36; stage-2 baseline(3)
-  x SNR(3) = 9) = 50 cases. 50 CSV + 50 `*_truth.json` + `manifest.csv` written.
-- Gate V1 (`test_fit_recovery.py`) recovers via the REAL fitter
-  (`fit.fit_spectrum`/`PipelineConfig`) — no fitting logic duplicated; bands are
-  identified by nearest fitted center to each true center to resolve lmfit's
-  label permutation. Stage-1 per-case worst relative error 7.86e-8 (gate 1e-3).
-
-Two structural conflicts were found, reported to the human, and resolved only with
-explicit approval (no gate weakened, no tolerance/pre-registration changed):
-- Conflict A (baseline): `fit_spectrum` always subtracts an estimated baseline and
-  had no zero option, biasing baseline-free recovery ~0.02–6% (> the 0.1% gate).
-  APPROVED additive Day-2 edit: added `baseline_method="none"` (returns an all-zero
-  array) to `baseline.py`, used ONLY by the Gate V1 recovery path. Constraints met:
-  linear/poly3/poly5/als behavior unchanged; `none` NOT added to any studied
-  baseline grid (Q1 science untouched); existing baseline tests pass unchanged;
-  Gate V6 differential re-run and green; V1 tolerance unchanged at < 0.1%; the
-  `none` option documented in the `baseline.py` docstring.
-- Conflict B (stage-2 mixed family): stage-2 truth mixes Lorentzian D/G with
-  Gaussian D3/D4, but `fit_spectrum` applies one lineshape to all bands, so no
-  matched fit exists (~41% I_D/I_G residual even with a perfect baseline). APPROVED
-  scope: Gate V1 per-case < 0.1% covers stage-1 only; stage-2 spectra+truth are
-  still generated and committed (Gaussian D3/D4 unchanged) for later gates. The
-  exclusion and its measured residual are documented in `test_fit_recovery.py`.
-
-Frozen decisions confirmed with the human before coding (docs were silent):
-stage-2 D/G = Lorentzian (default); area-ratio sweep is stage-1 only, stage-2 fixed
-at 1.0; cosmic spikes implemented as a generator toggle but NOT crossed as a suite
-dimension; satellite scaling ("15% of D", "30% of G") interpreted as AREA fraction.
-
-What this session did NOT do: it did NOT make the human realism judgement (only
-produced the two labelled PNGs for inspection); did NOT alter
-`data/calibrations/calibrations.yaml`, the Q2 prediction, or any pre-registered
-tolerance; did NOT create any Tier-B spectra; did NOT introduce any literature
-constant; and did NOT change Day-2 math to force recovery (the `none` baseline is an
-additive no-op approved by the human, not a change to any estimator or to the fit).
-
-Verification: `ruff check .` clean; full suite `python3 -m pytest` — 270 passed;
-Gate V1 `pytest tests/test_fit_recovery.py -v -m validation` — 6 passed.
-Realism plots: `data/synthetic/tierA/figures/tierA_stage1_r1p0_noiseless.png`,
-`data/synthetic/tierA/figures/tierA_stage2_r1p0_noiseless.png`.
-
-### Day 4 — Session A (Tier-B hostile suite + Gate V2 implementer) — 2026-06-18 — Reviewed and verified accurate - Avin Gupta, 2026-06-18
-
-**Role:** Implementer (Session A). Executed the frozen Day 4 contract: finalized
-Gate V2, built the out-of-family Tier-B generator + tests, and produced the
-human realism-gate plots. No science, pre-registration, or tolerance was changed.
-
-**Files created/edited:**
-- `src/ramanuq/hostile.py` — Tier-B out-of-family generator. Band constructors
-  `composite_band` (3–7 jittered narrow Lorentzians → non-Lorentzian aggregate),
-  `emg_band` (Gaussian core convolved with a one-sided exponential of constant
-  `tau` → asymmetric), `mixed_voigt_band` (per-band `eta`), and `gp_baseline`
-  (a smooth random baseline = broad random Gaussians + a decaying exponential;
-  severities `none|mild|strong`). The name `gp_baseline` is a label only — it is
-  NOT a Gaussian-process regressor and imports no GP/sklearn library.
-  `generate(case, seed)` and `suite(out_dir, seed)` write the full crossing.
-- `tests/test_hostile.py` — generator-contract tests (determinism, truth-schema
-  completeness, finiteness, monotonic axis, parseable one-to-one filenames, full
-  90-cell coverage, physically valid params, both truth definitions, baseline
-  severity metadata, out-of-family proof, Tier-A untouched, no Day-5 scope).
-- `tests/test_baseline.py` — added Gate V2 (`@pytest.mark.validation`) and a
-  despike-no-op/idempotence test on clean (spike-free) input; existing tests kept.
-- `scripts/render_tierB.py` — renders four representative Tier-B PNGs.
-- `data/synthetic/tierB/` — 90 CSV + 90 `*_truth.json` + `manifest.csv` + figures.
-
-**Gate V2 (pre-registered, 2% of G-band height, UNCHANGED).** Finalized as a
-peak-free truth construction: a noiseless spectrum that is only the Tier-A
-baseline curve (no peaks), so baseline-estimation quality is isolated from peak
-confounding; the reference is the stage-1 analytic G-band height. One genuine
-ambiguity in the original V2 entry — the method→baseline pairing — was surfaced
-to the human BEFORE implementation (measured: `linear` 10.5% and `poly3` 1.97%
-on `strong_curved`, so a literal full cross-product is unpassable without
-weakening the frozen 2%). The human fixed the in-class pairing and recorded it in
-`validation_plan.md`: `linear` graded on `none` only (a straight line cannot
-represent a curved background); `poly3/poly5/als` graded on all three severities
-(`none`, `mild_cubic`, `strong_curved`). Gate V2 implements exactly that pairing;
-the 2% tolerance is unchanged. All 10 graded (method, baseline) pairs pass.
-
-**Tier-B truth.** True intensities come only from the noiseless, baseline-free
-band callables, computed BEFORE baseline and noise: `true_id_ig_area` is the
-numeric integral (trapezoid) of D over G; `true_id_ig_height` is `max(D)/max(G)`.
-For the composite D band, height truth is the max of the SUMMED callable, not the
-sum of sub-peak heights. Both definitions are stored in every truth JSON, along
-with all band parameters (sub-peak centers/widths/areas/heights, EMG `tau`,
-per-band `eta`), the baseline parameters + severity label, the seed, and the
-generator-family labels. Truth is never read back off the observed curve.
-
-**Suite & determinism.** Full crossing {stage1, stage2} × {none, mild, strong}
-× SNR {200, 50, 15} × 5 instances = 90 spectra exactly. A single project seed
-(`hostile.SEED`, shared with `synth.SEED`) feeds all randomness; per-case
-randomness derives from `SeedSequence([SEED, crc32(case_id)])`, so cases are
-independent yet reproducible. CSV columns `shift_cm-1,intensity` and the
-`{stem}.csv` ↔ `{stem}_truth.json` naming reuse the Day-3 conventions; case_ids
-encode stage/severity/SNR/instance.
-
-**Out-of-family proof.** `test_composite_and_emg_bands_are_out_of_family` fits the
-best *independent* single Lorentzian (scipy least-squares) to each composite D and
-EMG G band and asserts relative RMS residual > 1%. Measured worst-case margins:
-composite ≈ 5.1%, EMG ≈ 15.6% (both well above 1%). This proves out-of-family
-without any claim of physical realism.
-
-**Verification:** `ruff check .` clean; full suite `python3 -m pytest -q` —
-746 passed; Gate V2 `pytest tests/test_baseline.py -v` — 19 passed (10 V2 pairs +
-guard + despike + finiteness); validation marker `pytest -m validation` — 25
-passed; `tests/test_hostile.py` — 462 passed. Realism plots (4):
-`data/synthetic/tierB/figures/tierB_stage1_blnone_snr200_i0.png`,
-`tierB_stage1_blstrong_snr15_i2.png`, `tierB_stage2_blmild_snr50_i1.png`,
-`tierB_stage2_blstrong_snr15_i3.png`.
-
-What this session did NOT do: did NOT make the human Tier-B realism judgement
-(only produced the four labelled PNGs for inspection); did NOT alter
-`data/calibrations/calibrations.yaml`, the Q2 prediction, or anything in
-`validation_plan.md` (the in-class V2 pairing note was written by the human);
-did NOT change any pre-registered tolerance; did NOT modify Tier-A data; did NOT
-change Day-2 math (lineshapes/model/fit/baseline/despike) to force any result;
-did NOT change Day-3 truth values; did NOT create any Day-5 metric/calibration
-code; did NOT introduce any literature constant; did NOT begin any Q1/Q2/Q3 study
-or grid work; and did NOT implement a real Gaussian-process baseline.
-
-### Day 5 — Session A (metrics + calibration-wiring implementer) — AG 2026-06-19
-
-**Role:** Implementer (Session A). Executed the frozen Day 5 contract: built the
-calibration loader, the `Metrics` container, and `compute_metrics`, wrote
-`docs/calibration_provenance.md` and `tests/test_metrics.py`. All scientific
-decisions — the hand-pin numbers, the calibration constants/equations, the
-intensity-definition matching, and the stage-guard thresholds — are the human's
-and were taken as-is from `data/calibrations/calibrations.yaml`. No
-pre-registration, Q2 prediction, tolerance, or truth file was touched.
-
-**Files created/edited:**
-- `src/ramanuq/metrics.py` — `load_calibrations(path)` validates per-calibration
-  provenance (non-empty `citation`, `doi`, `validity`, `intensity_definition`),
-  treats `stage_guard` as the only permitted non-calibration top-level key,
-  raises (never silently skips) on any other top-level entry lacking
-  `intensity_definition`, and parses constant strings to float (raising, never
-  defaulting, on unparseable values; `"n/a"` denotes no project constant). A
-  frozen `Metrics` dataclass with the contract field list. `compute_metrics(fit,
-  calibrations, definition)` reads every constant and the wavelength from the
-  loaded YAML / `fit.meta["wavelength_nm"]`; no calibration constant is
-  hard-coded. Each calibration is fed the ratio under its own declared intensity
-  definition (Cançado 2006 → area, Cançado 2011 → height), classified from the
-  YAML `intensity_definition` field. `la_tk` and `l_d` are intentional NaN with
-  flags. The stage guard suppresses the calibrated quantities (but not `id_ig`)
-  to NaN, flags the reason, and warns.
-- `src/ramanuq/fit.py` — one-line, numerically/scientifically neutral addition:
-  `meta["wavelength_nm"] = float(spec.wavelength_nm)` so `FitResult` carries the
-  excitation wavelength that `compute_metrics` consumes. No fit math, gate, or
-  tolerance changed (decision confirmed with the human before editing).
-- `docs/calibration_provenance.md` — summary of provenance already in the YAML
-  (citation, DOI, access date, equation, constant + units + uncertainty,
-  intensity definition, validity), plus notes that `la_tk`/`l_d` are intentional
-  NaN and that the stage-guard thresholds are documented assumptions. No source
-  fact not already in the YAML was introduced.
-- `tests/test_metrics.py` — hand-pin (532 nm, ratios == 1 → `la == 19.2246202982`,
-  `n_d == 2.2471185038e11`), constant-uncertainty propagation, intensity-definition
-  wiring (area/height not swapped), stage guard fires (both conditions; G-only,
-  no D3) and does not false-fire, provenance-validation raises (missing
-  citation/doi/intensity_definition against tmp copies), no-hard-coded-constants
-  source scan, and interval sanity.
-- `data/calibrations/calibrations.yaml` — fixed ONE stray trailing double-quote
-  (`stage-1.""` → `stage-1."`) at EOF that prevented the file from parsing at
-  all. Pure YAML-syntax fix; no scientific content (constants, equations,
-  citations, definitions, thresholds) was altered. The `2.4-e10`→`2.4e-10`
-  correction and the `stage_guard` block were already present in the working
-  tree (human edits).
-
-**FitResult fields read.** Areas/FWHMs from `fit.best["D_area"]`,
-`best["G_area"]`, `best["D_fwhm"]`, `best["G_fwhm"]`; optional D3 from
-`best["D3_area"]` (guard's D3 condition skipped when absent). Bootstrap rows from
-`fit.bootstrap_df` (same column names). Wavelength from `fit.meta["wavelength_nm"]`.
-Height-from-area via `lineshapes.lorentzian_height_from_area`.
-
-**Verification:** `python3 -m ruff check .` — clean. `python3 -m pytest
-tests/test_metrics.py -v` — 11 passed. Hand-pin, constant-uncertainty,
-definition-wiring, both stage-guard fire cases, no-false-fire, all three
-provenance-raise cases, no-hard-coded-constants scan, and interval sanity all
-green. `tests/test_fit.py`, `tests/test_fit_recovery.py`, `tests/test_smoke.py`
-still pass (11) after the one-line `fit.py` meta addition.
-
-What this session did NOT do: did NOT change the hand-pin numbers (the human's);
-did NOT alter calibrations.yaml scientific content (only fixed one stray quote so
-it parses); did NOT modify Tier-A or Tier-B truth files; did NOT touch
-`validation_plan.md`, the Q2 prediction, or any pre-registration/tolerance; did
-NOT hard-code any calibration constant (a source scan in the tests enforces this);
-did NOT edit `tests/test_differential_v6.py` or do any V6 work; and did NOT begin
-any Day-6+ work (no grid.py, selectors.py, mdc.py, robust.py, viz.py,
-reporting.py).
-
-## 2026-06-20 — Pre-Day-6 bug fix, Implementer — Avin Gupta, 6/20/2026
-
-**Role:** Implementer. Hardened the ALS baseline against an environment-dependent
-non-finite result that turned GitHub Actions (Python 3.11 / Linux) red while the
-suite stayed green locally (Python 3.14 / macOS).
-
-**Defect:** `tests/test_fit.py::test_fit_never_raises_on_degenerate_input` feeds a
-perfectly flat spectrum (all-zero intensity). In `_als_baseline`, the first solve
-returns `z = 0`; the asymmetric weight update `p*(y>z) + (1-p)*(y<z)` then drives
-*every* weight to zero (no point is strictly above or below the smooth). The next
-iteration's system collapses to `lam * DᵀD`, which is rank-deficient by two (its
-null space is the constant and linear ramps) and therefore exactly singular.
-`spsolve` on that singular matrix returns non-finite values on the Linux LAPACK
-backend (macOS happens to return finite), tripping the finite-value guard, which
-correctly raised `ValueError` — violating the `fit.py` contract that
-`fit_spectrum` must never raise on degenerate input.
-
-**Fix (src/ramanuq/baseline.py only):** Added a tiny fixed diagonal ridge
-(`_ALS_RIDGE = 1e-9`, applied as `wmat + dtd + ridge`) so the normal-equations
-matrix is always positive-definite and the solve is finite on every backend. On
-well-conditioned inputs the weights are always p (0.01) or 1−p (0.99), so the
-system is already PD and the ridge — many orders below the smallest weight —
-does not measurably perturb the fit. The `(baseline, diagnostics)` signature and
-diagnostics contents are unchanged.
-
-**Verification:** `test_fit_never_raises_on_degenerate_input` PASSES; full suite
-763 passed / 0 failed; all 29 `-m validation` gates (V1/V2/V6) still pass; `ruff
-check .` clean. A direct check confirmed `baseline.estimate(flat_spectrum,
-method="als")` now returns an all-finite array (and exactly zeros for the flat
-input), and a normal ALS fit remains finite.
-
-**What was NOT touched:** no test was changed, loosened, or deleted; no tolerance
-was weakened; no other `src` module, `fit.py`, `metrics.py`,
-`calibrations.yaml`, any Tier-A/Tier-B truth file, `validation_plan.md`, or any
-other doc/pre-registration was edited. No science, data, or calibration constant
-was altered. No Day-6 work was begun (no grid.py, robust.py, or any new module).
-The finite-value guard that raises was left intact — the solver was fixed so it
-no longer produces non-finite values in the first place.
-
-### Day 6 — Session A (configuration-grid study + Q1b jackknife + Gate V3) — AG, 2026-06-20
-
-**Role:** Implementer (Session A). Executed the frozen Day 6 contract (prompts
-P6 then P7).
-
-**What was implemented:**
-- `src/ramanuq/grid.py`: frozen `RESULT_COLUMNS` schema; `default_grid()`
-  (factorial over baseline × lineshape × bwf_g × peak_set × intensity, with
-  `bwf_g=True` emitted only for `lineshape=="lorentzian"` — 96 configurations);
-  `run_grid()` (fit + `compute_metrics` with the matching intensity definition,
-  never raising on a failed fit); `run_study()` (Tier-B suite run, truth join on
-  `case_id` selecting the matched-definition truth, `error`/`abs_error`, writes
-  parquet + csv to `data/synthetic/results/`); `decompose()` (explicitly
-  DESCRIPTIVE / non-causal spread summary); `rank_configurations()` (Q1 ranking
-  rule — RMSE-ascending order with coverage-floor and failure-rate eligibility
-  gates read from the plan as named constants).
-- `src/ramanuq/robust.py`: `jackknife_ranking()` (Q1b leave-one-out over
-  configuration families and suite instances; per-regime top-quartile retention,
-  rank IQR, and flip flag for the protocol-recommended config).
-- Tests: `tests/test_grid.py` (grid build/constraint, exact-schema, ranking
-  eligibility, DESCRIPTIVE-label, **Gate V3** `@pytest.mark.validation` with
-  `V3_BIAS_TOL = 0.05` citing Section 1, and the RESULT_COLUMNS schema-freeze
-  scan of downstream modules); `tests/test_robust.py` (fabricated frames with
-  stability known by construction — one dominant config pinned to retention 1.0
-  / no flip, one near-tie pinned to a flip).
-
-**One clarification requested and granted (recorded for provenance):**
-- Gate V3 "mean absolute bias": confirmed the metric is `|mean signed error|`
-  (systematic offset), graded per intensity definition with class key
-  `(lineshape, baseline, peak_set, intensity)` — area-ratio and height-ratio
-  truths are distinct physical quantities and are not pooled. Tolerance (0.05),
-  slice (`stage1` & `snr50`), and class factors were read from the plan, not
-  invented.
-
-**One protected-test edit, explicitly authorized (recorded for provenance):**
-- `tests/test_hostile.py::test_no_day5_scope_added`: dropped `grid` and `robust`
-  from `_DAY5_STUBS` (leaving `mdc`, `reporting`, `selectors`, `viz`), mirroring
-  the earlier removal of `metrics`. The guard protects modules not yet due;
-  grid/robust are due on Day 6, so they legitimately come off. No other change to
-  that test; no tolerance, assertion, or remaining-stub protection was weakened.
-
-**What was NOT done:** did NOT read the Q2 prediction (Section 5 / T1.6 of
-`validation_plan.md` was never opened — only Sections 1–4 were read). Did NOT
-alter any pre-registration content, tolerance, the ranking rule, the coverage
-floor, or the failure cap. Did NOT modify any Tier-A or Tier-B truth file,
-`calibrations.yaml` or any `data/` input, `metrics.py`, `fit.py`,
-`lineshapes.py`, or any existing `src` module other than creating `grid.py` and
-`robust.py`. Did NOT begin any Day-7+ work (no `selectors.py`, `mdc.py`,
-`viz.py`, `reporting.py`, no figures, no notebooks). Did NOT commit or push.
-
-— Reviewed and signed: Avin Gupta, 2026-06-21. Confirmed accurate: agents implemented grid.py/robust.py and the Day-6 tests and generated the analysis from existing study data; I personally inspected the ranking, ruled that the empty ranking is the faithful pre-registered result (rule and floor unchanged), and performed the spot-recompute. No agent authored my interpretation, changed my pre-registration, or read the Q2 prediction.
-— 2026-06-22, CX-4 statistics-audit fix (agent, Avin Gupta): extended the per-spectrum finiteness filter in `_spectrum_units` (`src/ramanuq/selectors.py`) to also drop configs whose audited selector columns (redchi/aic/bic) are non-finite, keeping a single surviving set shared across all selectors/strata; added regression test `test_cx4_nonfinite_selector_config_excluded_before_scoring` in `tests/test_selectors.py`. ruff clean; test_selectors.py and `-m validation` (incl. V4 and V6 selectors) green.
+**Sign-off:** Avin Gupta, 2026-06-22.
 
 ---
 
-## Day 8 — MDC / Q3 + protocol-card scaffold (agent session, 2026-06-22)
+## 2026-06-22 — Implementer (CX-4): statistics-audit fix
 
-**What this session implemented: Reviewed and signed — Avin Gupta, 2026-06-22.**
+**Role:** Implementer (CX-4 statistics-audit fix; agent session, Avin Gupta).
+
+**Work performed:** Extended the per-spectrum finiteness filter in
+`_spectrum_units` (`src/ramanuq/selectors.py`) to also drop configs whose audited
+selector columns (redchi/aic/bic) are non-finite, keeping a single surviving set
+shared across all selectors/strata; added regression test
+`test_cx4_nonfinite_selector_config_excluded_before_scoring` in
+`tests/test_selectors.py`.
+
+**Decisions and clarifications:** None recorded.
+
+**Verification:** ruff clean; `test_selectors.py` and `-m validation` (incl. V4
+and V6 selectors) green.
+
+**Out of scope (not performed):** None recorded.
+
+**Sign-off:** Avin Gupta, 2026-06-22.
+
+---
+
+## 2026-06-22 — Implementer (agent session): MDC / Q3 + protocol-card scaffold
+
+**Role:** Implementer (agent session).
+
+**Work performed:**
+
+What this session implemented:
 - `src/ramanuq/mdc.py`: `mdc(sigma_single, alpha=0.05, power=0.8, n_rep=1)` =
   `(norm.ppf(1-alpha/2) + norm.ppf(power)) * sqrt(2) * sigma_single / sqrt(n_rep)`;
   `to_delta_nd(mdc_value, calibrations, wavelength_nm)` returning the
@@ -485,13 +623,13 @@ floor, or the failure cap. Did NOT modify any Tier-A or Tier-B truth file,
   `HAND_PIN_MDC_IDIG = None`) that `pytest.skip`s while the value is None (NOT a
   validation gate); a 1/√n_rep scaling test; and std-vs-mean tests for the two
   estimators on a fabricated frame with known values.
-- `notebooks/04_mdc_casestudy_q3.ipynb`: loads the Tier-B parquet; per SNR
-  regime computes σ_single, bias, and MDC (I_D/I_G and Δn_D) for the NAIVE
-  config (linear|lorentzian|bwf_g=False|DG|height) and the PROTOCOL config (the
-  DG/area config with the smallest signed-error sd in that regime, with the
-  selection and reason printed); plots MDC-vs-SNR (naive vs protocol) in both
-  currencies in PLAIN inline matplotlib (no viz.py); prints the summary table.
-  No interpretive prose.
+- `notebooks/04_mdc_casestudy_q3.ipynb`: loads the Tier-B parquet; per SNR regime
+  computes σ_single, bias, and MDC (I_D/I_G and Δn_D) for the NAIVE config
+  (linear|lorentzian|bwf_g=False|DG|height) and the PROTOCOL config (the DG/area
+  config with the smallest signed-error sd in that regime, with the selection and
+  reason printed); plots MDC-vs-SNR (naive vs protocol) in both currencies in
+  PLAIN inline matplotlib (no viz.py); prints the summary table. No interpretive
+  prose.
 - `docs/protocol.md`: measured-cells-only table (regime | recommended | bias |
   RMSE | coverage | failure | MDC | stability), one row per SNR regime, with the
   empty author section heading left for the human.
@@ -502,31 +640,40 @@ floor, or the failure cap. Did NOT modify any Tier-A or Tier-B truth file,
   `pytest.importorskip` the reference module and skip gracefully while
   `ref_mdc`/`ref_to_delta_nd` are absent (reference authored separately/blind).
 
-**One stale stub-guard narrowed (recorded for provenance):**
-- `tests/test_hostile.py::test_no_day5_scope_added`: dropped `mdc` from
-  `_DAY5_STUBS` (leaving `reporting`, `viz`), because Day 8 (P9 / §9.8)
-  legitimately implements `mdc.py`. The guard still enforces that `reporting`
-  and `viz` remain stubs and that `hostile.py` imports neither. No tolerance,
-  assertion, or remaining-stub protection was weakened; this test is not a
-  `@pytest.mark.validation` gate.
+**Decisions and clarifications:** One stale stub-guard narrowed (recorded for
+provenance): `tests/test_hostile.py::test_no_day5_scope_added`: dropped `mdc` from
+`_DAY5_STUBS` (leaving `reporting`, `viz`), because Day 8 (P9 / §9.8) legitimately
+implements `mdc.py`. The guard still enforces that `reporting` and `viz` remain
+stubs and that `hostile.py` imports neither. No tolerance, assertion, or
+remaining-stub protection was weakened; this test is not a
+`@pytest.mark.validation` gate.
 
-**Gate results this session:** ruff clean; `tests/test_mdc.py` 3 passed / 1
-skipped (hand-pin); `-m validation` 34 passed / 2 skipped (the two new MDC
-differentials, awaiting ref_mdc); full suite 784 passed / 3 skipped.
+**Verification:** Gate results this session: ruff clean; `tests/test_mdc.py` 3
+passed / 1 skipped (hand-pin); `-m validation` 34 passed / 2 skipped (the two new
+MDC differentials, awaiting ref_mdc); full suite 784 passed / 3 skipped.
 
-**What was NOT done:** did NOT author any protocol recommendation prose (the
-`## Recommendations and scope` section is empty for the human). Did NOT compute
-or fill the hand-pin value (`HAND_PIN_MDC_IDIG` stays `None`; the test SKIPS).
-Did NOT change any tolerance, the pre-registration, the ranking rule, the
+**Out of scope (not performed):** Did NOT author any protocol recommendation
+prose (the `## Recommendations and scope` section is empty for the human). Did NOT
+compute or fill the hand-pin value (`HAND_PIN_MDC_IDIG` stays `None`; the test
+SKIPS). Did NOT change any tolerance, the pre-registration, the ranking rule, the
 coverage floor, or the failure cap. Did NOT edit `validation_plan.md`,
 `progress_journal.md`, or `calibrations.yaml` science. Did NOT modify any
 Tier-A/Tier-B truth file or the study results parquet/csv. Did NOT author
 `refimpl/ref_mdc.py` (kept blind). Did NOT build `viz.py`/`reporting.py` or any
 styled figure, and did NOT begin any Day-9 work. Did NOT commit or push.
 
-## Day 9 — report_data.json + figures F1-F9 + QA harness - Avin Gupta, 2026-06-24
+**Sign-off:** Reviewed and signed — Avin Gupta, 2026-06-22.
 
-**What this session implemented (factual; awaiting human review/signature):**
+---
+
+## 2026-06-24 — Implementer (agent session): report_data.json + figures F1–F9 + QA harness
+
+**Role:** Implementer (agent session). *(Factual; awaiting human
+review/signature.)*
+
+**Work performed:**
+
+What this session implemented:
 - `src/ramanuq/reporting.py`: reads the existing study parquet
   (`data/synthetic/results/tierB_grid_results.parquet`) and the frozen
   calibrations and RECOMPUTES every cited number (no copy from `protocol.md`),
@@ -539,26 +686,26 @@ styled figure, and did NOT begin any Day-9 work. Did NOT commit or push.
   top1_regret, top_quartile_hit per full/within_peak_set × SNR × selector via
   `selectors.audit`); `t6b_coverage` per regime; `mdc.per_regime` (protocol and
   naive σ_single, bias, MDC in I_D/I_G and Δn_D central + range, plus protocol
-  RMSE/coverage/failure). `select_protocol_config` mirrors notebook 04
-  (smallest signed-error sd among DG/area). A `self_check` compares recomputed
-  values to the authored protocol/validation numbers (atol 1e-3); `write_report_data`
+  RMSE/coverage/failure). `select_protocol_config` mirrors notebook 04 (smallest
+  signed-error sd among DG/area). A `self_check` compares recomputed values to
+  the authored protocol/validation numbers (atol 1e-3); `write_report_data`
   refuses to write if the self-check fails. Self-check PASSED.
 - `src/ramanuq/viz.py`: one Okabe-Ito colorblind-safe style, 300 dpi, PNG+PDF.
   Figures F1 (recovery parity + coverage), F2 (hostile-fit anatomy, true bands
   dashed, baseline-subtracted; fixed case `tierB_stage1_blmild_snr50_i3`; true
   components from `hostile.assemble`, fit curve rebuilt from `fit_spectrum`),
   F3 (per-config accuracy strip, naive + protocol flagged), F4 (RMSE/coverage
-  maps over baseline×lineshape, DG/area, per SNR), F5 (selector scatter +
-  top-1 regret + T6b coverage), F6 (protocol card), F7 (MDC curves I_D/I_G and
-  Δn_D, protocol vs naive), F8 (digitized published spectra; raises
-  `FileNotFoundError` when `data/digitized/` is empty), F9 (rank-stability empty
-  state). All cited numbers (F6/F7 and annotated values on F1/F4/F5/F9) read
-  from `docs/report_data.json`; F3/F4 read raw arrays from the parquet.
-  Non-schema keys (palette names, report keys, computed columns) held as named
-  constants to satisfy the `test_grid.py` schema-freeze scan (cf. selectors.py).
+  maps over baseline×lineshape, DG/area, per SNR), F5 (selector scatter + top-1
+  regret + T6b coverage), F6 (protocol card), F7 (MDC curves I_D/I_G and Δn_D,
+  protocol vs naive), F8 (digitized published spectra; raises `FileNotFoundError`
+  when `data/digitized/` is empty), F9 (rank-stability empty state). All cited
+  numbers (F6/F7 and annotated values on F1/F4/F5/F9) read from
+  `docs/report_data.json`; F3/F4 read raw arrays from the parquet. Non-schema keys
+  (palette names, report keys, computed columns) held as named constants to
+  satisfy the `test_grid.py` schema-freeze scan (cf. selectors.py).
 - `scripts/make_all_figures.py`: Agg backend, `SOURCE_DATE_EPOCH` pinned, fixed
-  SEED, stripped figure metadata; recomputes `report_data.json`, generates
-  F1-F7 and F9 (F8 skipped cleanly), and verifies the 16 output files are
+  SEED, stripped figure metadata; recomputes `report_data.json`, generates F1-F7
+  and F9 (F8 skipped cleanly), and verifies the 16 output files are
   byte-identical across two consecutive runs.
 - `scripts/figure_qa.py`: per figure asserts on-disk PNG/PDF exist and exceed a
   size threshold, axis labels present (where applicable), an explanatory element
@@ -572,16 +719,20 @@ styled figure, and did NOT begin any Day-9 work. Did NOT commit or push.
 - `docs/day9_briefing.md` and `docs/day9_quiz.md` authored (teaching material;
   quiz answers in a separate marked section).
 
-**Gate/QA results this session:** `ruff check .` clean; `figure_qa.py` 8/8
-generated figures PASS, F8 DEFERRED; `make_all_figures.py` reports all 16 files
-byte-identical across two runs; `report_data.json` self-check PASSED (reproduces
-authored protocol MDC 0.529/0.271/0.565, naive 0.745/0.763/0.703, bias
-+0.022/−0.086/−0.016, RMSE 0.133/0.109/0.141, coverage 0.467/0.233/0.200, T6b
-0.276/0.240/0.183, V3 best 0.0052); full suite `pytest -q` 787 passed, 2 warnings.
+**Decisions and clarifications:** None recorded beyond the stub-guard rename noted
+above.
 
-**What was NOT done:** did NOT re-run the Day-6 study (read the parquet only);
-did NOT alter any pre-registration tolerance, the ranking rule, the coverage
-floor, or the failure cap. Did NOT edit `validation_plan.md`,
+**Verification:** Gate/QA results this session: `ruff check .` clean;
+`figure_qa.py` 8/8 generated figures PASS, F8 DEFERRED; `make_all_figures.py`
+reports all 16 files byte-identical across two runs; `report_data.json`
+self-check PASSED (reproduces authored protocol MDC 0.529/0.271/0.565, naive
+0.745/0.763/0.703, bias +0.022/−0.086/−0.016, RMSE 0.133/0.109/0.141, coverage
+0.467/0.233/0.200, T6b 0.276/0.240/0.183, V3 best 0.0052); full suite `pytest -q`
+787 passed, 2 warnings.
+
+**Out of scope (not performed):** Did NOT re-run the Day-6 study (read the parquet
+only); did NOT alter any pre-registration tolerance, the ranking rule, the
+coverage floor, or the failure cap. Did NOT edit `validation_plan.md`,
 `progress_journal.md`, or `protocol.md` (no number or word changed). Did NOT
 modify `calibrations.yaml`, `metrics.py`, `grid.py`, `selectors.py`, `mdc.py`,
 any Tier-A/Tier-B truth file, or the study parquet/csv. Did NOT select or
@@ -590,12 +741,18 @@ author interpretive prose. Did NOT begin Day-10 report work (no
 `report_template.md`, `build_report.py`, README assembly, or Gate V5 assertion).
 Did NOT commit or push.
 
-## Day 10 — report assembly (template + builder + README) + Gate V5 (Avin Gupta - 2026-06-24)
+**Sign-off:** Avin Gupta - 2026-06-24
+
+---
+
+## 2026-06-24 — Implementer: report assembly (template + builder + README) + Gate V5
 
 **Role:** Implementer (report assembly / plumbing). Executed the Day-10 contract
 (manual prompt P11 / §9.10).
 
-**What this session built:**
+**Work performed:**
+
+What this session built:
 - `docs/report_template.md`: the report skeleton (Abstract; 1 Introduction;
   2 Methods; 3 Instrument validation; 4 Q1/Q1b; 5 Q2; 6 Q3; 7 Protocol and
   disclosure checklist; 8 Limitations; References). Every reported result numeral
@@ -608,10 +765,10 @@ Did NOT commit or push.
 - `scripts/build_report.py`: loads `report_data.json`, parses the template's
   PLACEHOLDER MAP, resolves and formats every `{{key}}` from its JSON path,
   writes `docs/report_draft.md`, and renders `docs/report.pdf` via pandoc
-  (best-effort). Fails loudly listing any unresolved/unmapped placeholders.
-  This run resolved 79 unique placeholders (81 substitutions); pandoc is not
-  installed in this environment, so the PDF render was skipped with a clear note
-  (the Markdown draft was written).
+  (best-effort). Fails loudly listing any unresolved/unmapped placeholders. This
+  run resolved 79 unique placeholders (81 substitutions); pandoc is not installed
+  in this environment, so the PDF render was skipped with a clear note (the
+  Markdown draft was written).
 - `README.md`: assembled from a template with two empty `AUTHOR: FINDING
   SENTENCE` slots, the F3 figure embedded, a quickstart, the V1–V6 gates table
   with tolerances, a link to `docs/protocol.md`, the citation pointer to
@@ -625,38 +782,43 @@ Did NOT commit or push.
 - `docs/briefings/day10_briefing.md` and `docs/briefings/day10_quiz.md`:
   teaching material (quiz answers in a separate marked section).
 
-**Gate V5 result:** measured I_D/I_G = 1.5227 (config
+**Decisions and clarifications:** None recorded.
+
+**Verification:** Gate V5 result: measured I_D/I_G = 1.5227 (config
 `baseline=linear|lineshape=lorentzian|bwf_g=False|peak_set=DG|intensity=height`,
 fixed a priori from the paper's stated method + textbook Lorentzian + linear
 baseline; not tuned to pass), target 1.6, window [1.440, 1.760] → **PASS**. The
 result was written into `docs/report_data.json` by replacing the explicitly
 `pending_day10` `gates.V5` placeholder; this is the only change to that file.
+Gate/QA results this session: `ruff check .` clean; full suite `pytest -q` 787
+passed, 2 warnings (the pre-existing stage-guard warnings).
 
-**Gate/QA results this session:** `ruff check .` clean; full suite `pytest -q`
-787 passed, 2 warnings (the pre-existing stage-guard warnings).
+**Out of scope (not performed):** Did NOT author any interpretive prose (all
+author slots left empty). Did NOT hard-code any number in the template or the
+builder (every result numeral is a placeholder resolved from `report_data.json`).
+Did NOT touch the recomputed values in `report_data.json` (only the explicitly
+pending `gates.V5` placeholder was filled). Did NOT edit `validation_plan.md`,
+`progress_journal.md`, or any number in `protocol.md`, and did NOT alter the Day-7
+Q2 verdict text. Did NOT weaken the Gate V5 ±10% tolerance. Did NOT modify any
+science module, calibration, truth file, the study parquet, or any gate tolerance.
+Did NOT begin any Day-11 release work. Did NOT commit or push.
 
-**What was NOT done:** did NOT author any interpretive prose (all author slots
-left empty). Did NOT hard-code any number in the template or the builder (every
-result numeral is a placeholder resolved from `report_data.json`). Did NOT touch
-the recomputed values in `report_data.json` (only the explicitly pending
-`gates.V5` placeholder was filled). Did NOT edit `validation_plan.md`,
-`progress_journal.md`, or any number in `protocol.md`, and did NOT alter the
-Day-7 Q2 verdict text. Did NOT weaken the Gate V5 ±10% tolerance. Did NOT modify
-any science module, calibration, truth file, the study parquet, or any gate
-tolerance. Did NOT begin any Day-11 release work. Did NOT commit or push.
+**Sign-off:** Avin Gupta — 2026-06-24
 
-Signed: Avin Gupta - I authored all interpretive prose in the report (abstract, introduction, Q1/Q1b, Q2 interpretation, Q3, limitations), the disclosure checklist, and the two README finding sentences; the Q2 verdict is included verbatim from my Day-7 text. I ran and interpreted Gate V5 and ratified its configuration. I resolved all CX-5 prose-critique flags myself, including softening the §4 peak-set language from causal to associational to match my pre-registration.
+---
 
-## Day 11 — release prep (release notes + CITATION.cff + Definition-of-Done pre-check) — agent session, 2026-06-25
+## 2026-06-25 — Release implementer (agent session): release prep
 
 **Role:** Release implementer (plumbing/inspection only). Executed the Day-11
 release-prep contract with the project frozen.
 
-**What this session did (facts):**
+**Work performed:**
+
+What this session did (facts):
 - Inspected `repro.sh` (did NOT run it) and reported on its contents. Finding:
-  no `repro.sh` exists in the working tree or git index, and no doc references
-  it by name; reported this as a gap for the human and proposed (did NOT apply)
-  a parquet-by-default reproduction script with the full ~7-hour study behind an
+  no `repro.sh` exists in the working tree or git index, and no doc references it
+  by name; reported this as a gap for the human and proposed (did NOT apply) a
+  parquet-by-default reproduction script with the full ~7-hour study behind an
   explicit `RUN_FULL_STUDY=1` opt-in.
 - Ran the check suites and recorded counts (silently fixed nothing): `pytest -q`
   787 passed / 0 failed (2 pre-existing stage-guard warnings); `pytest -q -m
@@ -669,34 +831,45 @@ release-prep contract with the project frozen.
   `[AVIN ...]` lead-sentence line as a literal placeholder.
 - Created/updated `CITATION.cff` to the supplied v0.1.0 content (date-released
   2026-06-25; orcid and doi left commented for the human).
-- Produced the Definition-of-Done pre-check (PASS/GAP per item) and flagged
-  three items for the human without fixing them: missing `repro.sh`; empty
-  `docs/disclosure_checklist.md` stub; and that `docs/report.pdf` embeds a
-  PDF creation/mod timestamp (`/CreationDate`), so it cannot be byte-diffed.
+- Produced the Definition-of-Done pre-check (PASS/GAP per item) and flagged three
+  items for the human without fixing them: missing `repro.sh`; empty
+  `docs/disclosure_checklist.md` stub; and that `docs/report.pdf` embeds a PDF
+  creation/mod timestamp (`/CreationDate`), so it cannot be byte-diffed.
 - Authored a Day-11 science briefing and quiz (teaching material).
 
-**What was NOT done:** did NOT author or edit any interpretive/finding prose
-(abstract, Q1/Q1b/Q2/Q3 interpretation, limitations, verdict, protocol
+**Decisions and clarifications:** None recorded.
+
+**Verification:** `pytest -q` 787 passed / 0 failed (2 pre-existing stage-guard
+warnings); `pytest -q -m validation` 36 passed / 0 failed / 751 deselected; `ruff
+check .` clean; `scripts/figure_qa.py` all 9 figures (F1-F9) PASS.
+
+**Out of scope (not performed):** Did NOT author or edit any interpretive/finding
+prose (abstract, Q1/Q1b/Q2/Q3 interpretation, limitations, verdict, protocol
 recommendations, README finding sentences, disclosure checklist — all author
 slots left as the human's existing content or empty placeholders). Did NOT
-introduce any number or citation (every numeral in the release notes was read
-from `docs/report_data.json`). Did NOT create any git tag, GitHub release, or
-DOI. Did NOT run `repro.sh`. Did NOT weaken any gate or tolerance. Did NOT touch
+introduce any number or citation (every numeral in the release notes was read from
+`docs/report_data.json`). Did NOT create any git tag, GitHub release, or DOI. Did
+NOT run `repro.sh`. Did NOT weaken any gate or tolerance. Did NOT touch
 `docs/validation_plan.md`, `docs/progress_journal.md`, the values in
 `docs/report_data.json`, `docs/protocol.md`, the Day-7 Q2 verdict text,
-`data/calibrations/calibrations.yaml`, `src/ramanuq/{metrics,grid,selectors,mdc}.py`,
-the Tier-A/Tier-B truth files, or `data/synthetic/results/tierB_grid_results.parquet`.
-Files written this session: `docs/release_notes_v0.1.0.md` (new), `CITATION.cff`
-(updated), this `docs/ai_usage_log.md` append, and the Day-11 briefing/quiz.
+`data/calibrations/calibrations.yaml`,
+`src/ramanuq/{metrics,grid,selectors,mdc}.py`, the Tier-A/Tier-B truth files, or
+`data/synthetic/results/tierB_grid_results.parquet`. Files written this session:
+`docs/release_notes_v0.1.0.md` (new), `CITATION.cff` (updated), this
+`docs/ai_usage_log.md` append, and the Day-11 briefing/quiz.
 
-Signed: Avin Gupta, 2026-06-25
+**Sign-off:** Avin Gupta, 2026-06-25.
 
-## 2026-06-25 — Day 11, Implementer (reproducibility fix: Gate V5 into the generator) — Avin Gupta, 6/25/2026
+---
+
+## 2026-06-25 — Implementer: reproducibility fix (Gate V5 into the generator)
 
 **Role:** Implementer. Fixed one reproducibility bug so `docs/report_data.json`
 regenerates byte-identically from code; authored no interpretation.
 
-**What this session implemented:**
+**Work performed:**
+
+What this session implemented:
 - Moved the Gate V5 computation (published-spectrum reproduction) verbatim from
   `notebooks/04_mdc_casestudy_q3.ipynb` cell 8 into a new
   `ramanuq.reporting._compute_v5_gate(cals, digitized_dir)` helper, and wired it
@@ -710,25 +883,33 @@ regenerates byte-identically from code; authored no interpretation.
 - Converted notebook 04 cell 8's `report_data.json` patch block (the
   `json.load`/`json.dump` write and the `assert status == 'pending_day10'`) to a
   diagnostic-only cell; `write_report_data()` is now the single source of truth.
-- Verified `git diff` on `docs/report_data.json` is EMPTY after regeneration
-  (byte-identical; `measured_idig` regenerated to the committed
-  1.5226796786121322), and that `repro.sh` (fast path) and `figure_qa` pass.
 
-Signed: Avin Gupta, 2026-06-25
+**Decisions and clarifications:** None recorded.
 
-## 2026-06-25 — Day 11, Implementer (runtime dependency fix) — Avin Gupta, 6/25/2026
+**Verification:** Verified `git diff` on `docs/report_data.json` is EMPTY after
+regeneration (byte-identical; `measured_idig` regenerated to the committed
+1.5226796786121322), and that `repro.sh` (fast path) and `figure_qa` pass.
+
+**Out of scope (not performed):** None recorded.
+
+**Sign-off:** Avin Gupta, 2026-06-25.
+
+---
+
+## 2026-06-25 — Implementer: runtime dependency fix
 
 **Role:** Implementer. Fixed missing runtime dependency declarations exposed by a
 fresh-clone reproduction; touched no module logic, science, or prose.
 
-**What this session implemented:**
-- A fresh-clone run of `repro.sh` failed at `pandas.read_parquet` ("Unable to
-  find a usable engine; tried using: 'pyarrow', 'fastparquet'") and skipped the
-  PDF render because `xhtml2pdf` was absent. The local `.venv` had both installed
-  from earlier days, which had masked the gap. Both are real runtime needs:
-  `pyarrow` is the parquet engine for `pandas.read_parquet`, and `xhtml2pdf`
-  (`from xhtml2pdf import pisa`) is the report PDF engine in
-  `scripts/build_report.py`.
+**Work performed:**
+
+What this session implemented:
+- A fresh-clone run of `repro.sh` failed at `pandas.read_parquet` ("Unable to find
+  a usable engine; tried using: 'pyarrow', 'fastparquet'") and skipped the PDF
+  render because `xhtml2pdf` was absent. The local `.venv` had both installed from
+  earlier days, which had masked the gap. Both are real runtime needs: `pyarrow`
+  is the parquet engine for `pandas.read_parquet`, and `xhtml2pdf` (`from
+  xhtml2pdf import pisa`) is the report PDF engine in `scripts/build_report.py`.
 - Added `"pyarrow"` and `"xhtml2pdf"` to `[project].dependencies` in
   `pyproject.toml` (unpinned, matching the existing no-pin convention there).
 - Audited every third-party top-level import across `src/ramanuq/`, `scripts/`,
@@ -739,21 +920,31 @@ fresh-clone reproduction; touched no module logic, science, or prose.
 - No lockfile was updated: `requirements.txt` is pinned but is not referenced by
   `repro.sh`, `bootstrap.sh`, or CI (all use `pip install -e .`/`-e ".[dev]"`),
   and there is no `uv.lock`; so no pinned reproduction manifest required a change.
-- Verified in a throwaway venv built from the system Python (not the repo
-  `.venv`): `pip install -e .` followed by importing
-  `pyarrow, xhtml2pdf, pandas, numpy, scipy, lmfit, matplotlib, yaml` and
-  `from ramanuq.reporting import write_report_data` all succeeded; temp venv then
-  removed. Local `pytest` (787 passed) and `figure_qa` (9/9 PASS) re-confirmed.
 
-Signed: Avin Gupta, 2026-06-25
+**Decisions and clarifications:** None recorded.
 
-## 2026-06-25 — Day 11, Implementer (Gate V5 cross-machine reproducibility rounding) — agent session
+**Verification:** Verified in a throwaway venv built from the system Python (not
+the repo `.venv`): `pip install -e .` followed by importing
+`pyarrow, xhtml2pdf, pandas, numpy, scipy, lmfit, matplotlib, yaml` and
+`from ramanuq.reporting import write_report_data` all succeeded; temp venv then
+removed. Local `pytest` (787 passed) and `figure_qa` (9/9 PASS) re-confirmed.
 
-- A fresh-clone reproduction showed `gates.V5.measured_idig` differed in the
-  ~11th significant figure between machines (1.5226796786121322 vs
-  1.5226795636072374) — optimizer floating-point noise from a different library
-  build. The science is unchanged (V5 = PASS, ~1.5227 vs target 1.6, well inside
-  the ±10% window [1.44, 1.76]).
+**Out of scope (not performed):** None recorded.
+
+**Sign-off:** Avin Gupta, 2026-06-25.
+
+---
+
+## 2026-06-25 — Implementer: Gate V5 cross-machine reproducibility rounding
+
+**Role:** Implementer (agent session).
+
+**Work performed:**
+- A fresh-clone reproduction showed `gates.V5.measured_idig` differed in the ~11th
+  significant figure between machines (1.5226796786121322 vs 1.5226795636072374) —
+  optimizer floating-point noise from a different library build. The science is
+  unchanged (V5 = PASS, ~1.5227 vs target 1.6, well inside the ±10% window
+  [1.44, 1.76]).
 - Fix: in `_compute_v5_gate()` in `src/ramanuq/reporting.py`, rounded the measured
   value to 4 decimal places before storing it
   (`measured = round(float(... .id_ig), 4)`). 4 dp is the honest precision for a
@@ -764,15 +955,25 @@ Signed: Avin Gupta, 2026-06-25
   line is `measured_idig` -> 1.5227. Regenerated all 18 figure artifacts
   (byte-identical, no figure file modified) and rebuilt the report
   (`docs/report.pdf`). `report_draft.md` was unchanged.
-- Verified on-machine determinism: re-running `write_report_data()` repeatedly
-  keeps `measured_idig` at exactly 1.5227 and the diff at a single line.
-- `pytest` (787 passed) and `figure_qa` (9/9 PASS) re-confirmed green; no test
-  pinned the old 16-digit value, so no test required updating.
 
-Signed: Avin Gupta, 2026-06-25
+**Decisions and clarifications:** None recorded.
 
-## 2026-06-27 — Buffer day, Implementer (Gate V5b second published-spectrum demo, AREA mode) — agent session
+**Verification:** Verified on-machine determinism: re-running `write_report_data()`
+repeatedly keeps `measured_idig` at exactly 1.5227 and the diff at a single line.
+`pytest` (787 passed) and `figure_qa` (9/9 PASS) re-confirmed green; no test
+pinned the old 16-digit value, so no test required updating.
 
+**Out of scope (not performed):** None recorded.
+
+**Sign-off:** Avin Gupta, 2026-06-25.
+
+---
+
+## 2026-06-27 — Implementer (agent session): Gate V5b second published-spectrum demo (AREA mode)
+
+**Role:** Implementer (agent session).
+
+**Work performed:**
 - Added a second Gate V5 demonstration, `V5b`, mirroring `_compute_v5_gate()` for
   the integrated-AREA definition. New code in `src/ramanuq/reporting.py`:
   module-level constants `_V5B_CONFIG` (baseline=linear, lineshape=lorentzian,
@@ -794,16 +995,26 @@ Signed: Avin Gupta, 2026-06-25
   `measured_idig`, `window == [1.476, 1.804]`, `result in {PASS, MISS}`, and
   `intensity_mode == "area"`; and that `gates.V5` is still present and unchanged
   in shape. No specific measured number is asserted beyond finiteness.
-- `python3 -m pytest -q` → 789 passed; `python3 -m ruff check .` → All checks
-  passed.
 
-Signed: Avin Gupta - 2026-06-27
+**Decisions and clarifications:** None recorded.
 
-## 2026-06-27 — Buffer day, Implementer (v0.2.0 cosmetic cleanup — byte-neutral refactors/doc) — agent session
+**Verification:** `python3 -m pytest -q` → 789 passed; `python3 -m ruff check .` →
+All checks passed.
 
-- Scope: byte-neutral cosmetic cleanup only. Every figure file (F1–F9 .png/.pdf)
-  and `docs/report_data.json` were required to stay byte-identical to their
-  committed state; no number, gate, tolerance, or science-module logic touched.
+**Out of scope (not performed):** None recorded.
+
+**Sign-off:** Avin Gupta, 2026-06-27.
+
+---
+
+## 2026-06-27 — Implementer (agent session): v0.2.0 cosmetic cleanup (byte-neutral)
+
+**Role:** Implementer (agent session). Scope: byte-neutral cosmetic cleanup only.
+Every figure file (F1–F9 .png/.pdf) and `docs/report_data.json` were required to
+stay byte-identical to their committed state; no number, gate, tolerance, or
+science-module logic touched.
+
+**Work performed:**
 - `requirements.txt`: added the two runtime pins already declared in
   `pyproject.toml` but missing here — `pyarrow==24.0.0` and `xhtml2pdf==0.2.17` —
   in the existing exact-pin style; no other line changed.
@@ -823,8 +1034,10 @@ Signed: Avin Gupta - 2026-06-27
   definition selection — that the area (integrated) and height definitions yield
   different I_D/I_G values for the same spectrum. Metadata only; no number,
   finding, or claim added.
-- F6 protocol-card stability string — NOT changed (STOPPED and reported): the
-  only candidate value in `report_data.json`
+
+**Decisions and clarifications:**
+- F6 protocol-card stability string — NOT changed (STOPPED and reported): the only
+  candidate value in `report_data.json`
   (`q1b_stability.per_regime.SNR* == "undefined; 0 rank-eligible configs"`) is NOT
   equal to the figure's current literal
   (`"undefined\n(Q1b vacuous;\n0 rank-eligible\nconfigs)"`). Substituting it would
@@ -833,91 +1046,124 @@ Signed: Avin Gupta - 2026-06-27
   pipeline result (`FitResult`) nor the figure's data sources (study parquet,
   `report_data.json`, tierB truth JSON) retain the fitted/true curves, so there is
   no already-computed copy to read; the pipeline-internal best-fit curve differs
-  from the inline reconstruction at the ~7e-15 level, so byte-identity could not
-  be guaranteed. F2 left unchanged.
-- Verification: `python3 -m pytest -q` → 789 passed, 0 failed; `python3 -m ruff
-  check .` → All checks passed. Regenerated `report_data.json` and all 18 figure
-  artifacts (without RUN_FULL_STUDY) and byte-compared to committed: every PNG,
-  every PDF except F2, and `report_data.json` are byte-identical. `figures/F2.pdf`
-  differs by exactly 1 byte (115758 → 115757); the SAME 1-byte difference
-  reproduces from a CLEAN HEAD with zero edits, confirming it is a pre-existing
-  environment-level artifact independent of this pass. Committed figure bytes were
-  left untouched in the working tree.
+  from the inline reconstruction at the ~7e-15 level, so byte-identity could not be
+  guaranteed. F2 left unchanged.
 
-Signed: Avin Gupta - 2026-06-27
+**Verification:** `python3 -m pytest -q` → 789 passed, 0 failed; `python3 -m ruff
+check .` → All checks passed. Regenerated `report_data.json` and all 18 figure
+artifacts (without RUN_FULL_STUDY) and byte-compared to committed: every PNG,
+every PDF except F2, and `report_data.json` are byte-identical. `figures/F2.pdf`
+differs by exactly 1 byte (115758 → 115757); the SAME 1-byte difference
+reproduces from a CLEAN HEAD with zero edits, confirming it is a pre-existing
+environment-level artifact independent of this pass. Committed figure bytes were
+left untouched in the working tree.
 
-## 2026-06-28 — Buffer day, Implementer (v0.2.0 presentation polish — F3 & F1(b) label declutter) — agent session
+**Out of scope (not performed):** No number, gate, tolerance, or science-module
+logic touched; F6 stability string and F2 hostile-fit curves left unchanged as
+noted above.
 
-- Scope: presentation-only label repositioning in `src/ramanuq/viz.py` for exactly
-  two figures — F3 and F1 panel (b). No plotted data point, marker/line position,
-  axis limit, tick value, color mapping, or computed number changed;
-  `docs/report_data.json` required to stay byte-identical.
+**Sign-off:** Avin Gupta, 2026-06-27.
+
+---
+
+## 2026-06-28 — Implementer (agent session): v0.2.0 presentation polish (F3 & F1(b) label declutter)
+
+**Role:** Implementer (agent session). Scope: presentation-only label
+repositioning in `src/ramanuq/viz.py` for exactly two figures — F3 and F1 panel
+(b). No plotted data point, marker/line position, axis limit, tick value, color
+mapping, or computed number changed; `docs/report_data.json` required to stay
+byte-identical.
+
+**Work performed:**
 - F3 (`figure_f3`): the two protocol-config text labels ("protocol SNR15" and
   "protocol SNR50/200") previously overlapped each other and ran off the bottom
   axis. Repositioned both with staggered offsets up into the empty band above the
   DG row, each connected to its marker by a thin leader line (annotate
-  `arrowprops`). The naive/protocol MARKERS and their (error, peak-set) positions,
-  colors, and flags are unchanged; only label text placement moved.
-- F1 panel (b) (`figure_f1`): the reference-line legend ("nominal 0.95" /
-  "rank floor 0.90") sat at upper-right directly over the two closely-spaced
-  reference lines. Moved the legend to `loc="center right"` (a clear band) so the
-  labels no longer crowd the lines. The axhline values/positions are unchanged.
-- Verification: `python3 -m pytest -q` → 789 passed, 0 failed; `python3 -m ruff
-  check .` → All checks passed. Regenerated `report_data.json` and all 18 figure
-  artifacts (without RUN_FULL_STUDY): F3.png/F3.pdf and F1.png/F1.pdf changed
-  (intended); `docs/report_data.json` and every other figure (F2, F4–F9
-  .png/.pdf) byte-identical to committed; each figure byte-identical across two
-  consecutive renders (determinism preserved). As in the 2026-06-27 pass,
-  regenerating `figures/F2.pdf` reproduces the same pre-existing environment-level
-  byte difference unrelated to this change, so the committed F2.pdf bytes were left
-  untouched in the working tree.
+  `arrowprops`). The naive/protocol MARKERS and their (error, peak-set)
+  positions, colors, and flags are unchanged; only label text placement moved.
+- F1 panel (b) (`figure_f1`): the reference-line legend ("nominal 0.95" / "rank
+  floor 0.90") sat at upper-right directly over the two closely-spaced reference
+  lines. Moved the legend to `loc="center right"` (a clear band) so the labels no
+  longer crowd the lines. The axhline values/positions are unchanged.
 
-Signed: Avin Gupta - 2026-06-27
+**Decisions and clarifications:** None recorded.
 
-## 2026-06-28 — Buffer day, Implementer (v0.2.0 descope-ladder item — F10 replicate-averaging MDC curve) — agent session
+**Verification:** `python3 -m pytest -q` → 789 passed, 0 failed; `python3 -m ruff
+check .` → All checks passed. Regenerated `report_data.json` and all 18 figure
+artifacts (without RUN_FULL_STUDY): F3.png/F3.pdf and F1.png/F1.pdf changed
+(intended); `docs/report_data.json` and every other figure (F2, F4–F9 .png/.pdf)
+byte-identical to committed; each figure byte-identical across two consecutive
+renders (determinism preserved). As in the 2026-06-27 pass, regenerating
+`figures/F2.pdf` reproduces the same pre-existing environment-level byte
+difference unrelated to this change, so the committed F2.pdf bytes were left
+untouched in the working tree.
 
-- Scope: added a new figure F10 (and only F10) showing the replicate-averaging
-  minimum-detectable-change (MDC) curve — MDC in I_D/I_G units vs the number of
-  averaged replicate spectra N_rep (1..10) — for the protocol config vs the naive
-  config, per SNR regime (15/50/200). Pure replotting of EXISTING math: no new
-  science, no new dependency, no new sigma values, no new constants.
+**Out of scope (not performed):** No plotted data point, marker/line position,
+axis limit, tick value, color mapping, or computed number changed.
+
+**Sign-off:** Avin Gupta — 2026-06-28
+
+---
+
+## 2026-06-28 — Implementer (agent session): v0.2.0 descope-ladder item (F10 replicate-averaging MDC curve)
+
+**Role:** Implementer (agent session). Scope: added a new figure F10 (and only
+F10) showing the replicate-averaging minimum-detectable-change (MDC) curve — MDC
+in I_D/I_G units vs the number of averaged replicate spectra N_rep (1..10) — for
+the protocol config vs the naive config, per SNR regime (15/50/200). Pure
+replotting of EXISTING math: no new science, no new dependency, no new sigma
+values, no new constants.
+
+**Work performed:**
 - `src/ramanuq/viz.py`: added `figure_f10` and registered it in `FIGURES`. It
-  reads the per-(config, regime) single-spectrum precision (`protocol_sigma_single`
-  / `naive_sigma_single`) recomputed in `report_data.json` and applies the EXISTING
-  `ramanuq.mdc.mdc` (same alpha=0.05/power=0.8 that produced the frozen N_rep=1
-  MDCs) swept over N_rep 1..10. Three subplots (one per SNR), colorblind-safe
-  Okabe-Ito (blue=protocol/solid/square, vermillion=naive/dashed/circle).
+  reads the per-(config, regime) single-spectrum precision
+  (`protocol_sigma_single` / `naive_sigma_single`) recomputed in
+  `report_data.json` and applies the EXISTING `ramanuq.mdc.mdc` (same
+  alpha=0.05/power=0.8 that produced the frozen N_rep=1 MDCs) swept over N_rep
+  1..10. Three subplots (one per SNR), colorblind-safe Okabe-Ito
+  (blue=protocol/solid/square, vermillion=naive/dashed/circle).
 - `src/ramanuq/reporting.py` (`write_report_data`/`compute_report_data`): ADDED a
   new top-level key `f10_replicate_mdc` (per regime, per config, the MDC at each
   N_rep 1..10) reusing the same sigma_single and `mdc()` as the frozen MDCs. No
   existing `report_data.json` value was altered.
-- `scripts/make_all_figures.py`: added F10 to `GENERATED`.
-  `scripts/figure_qa.py`: added F10 to `FIG_SPEC` (labels + legend; exists,
-  size>threshold, byte-identical across two renders — same coverage as F1-F9).
+- `scripts/make_all_figures.py`: added F10 to `GENERATED`. `scripts/figure_qa.py`:
+  added F10 to `FIG_SPEC` (labels + legend; exists, size>threshold, byte-identical
+  across two renders — same coverage as F1-F9).
 - `tests/test_f10.py` (new): asserts (a) every F10 curve at N_rep=1 equals the
   frozen per-regime MDC (protocol 0.529/0.271/0.565, naive 0.745/0.763/0.703 for
   SNR 15/50/200) to 3 dp; (b) each curve falls as 1/sqrt(N_rep) (N_rep=4 = half of
-  N_rep=1); (c) `report_data.json` carries `f10_replicate_mdc` with 10 N_rep points
-  per regime/config.
-- Verification (without RUN_FULL_STUDY; read from committed parquet only):
-  `python3 -m pytest -q` → 792 passed (789 + 3 new F10 tests), 0 failed;
-  `python3 -m ruff check .` → All checks passed; `python3 scripts/figure_qa.py` →
-  all 10 figures PASS. Regenerated `report_data.json` and all figures: F1-F9
-  (.png/.pdf) byte-identical to committed and `report_data.json` changed only by
-  the ADDED `f10_replicate_mdc` key (every existing value byte-identical). As in
-  the 2026-06-27/28 passes, regenerating `figures/F2.pdf` reproduces the same
-  pre-existing environment-level 1-byte difference (115758 → 115757) unrelated to
-  this change, so the committed F2.pdf bytes were restored/left untouched. F10.png
-  and F10.pdf are byte-identical across two consecutive renders.
+  N_rep=1); (c) `report_data.json` carries `f10_replicate_mdc` with 10 N_rep
+  points per regime/config.
 
-Signed: Avin Gupta - 2026-06-28
+**Decisions and clarifications:** None recorded.
 
-## 2026-06-28 — Buffer day, Implementer (docs/ file organization toward v0.2.0) — Avin Gupta, 6/28/2026
+**Verification:** Without RUN_FULL_STUDY (read from committed parquet only):
+`python3 -m pytest -q` → 792 passed (789 + 3 new F10 tests), 0 failed; `python3 -m
+ruff check .` → All checks passed; `python3 scripts/figure_qa.py` → all 10 figures
+PASS. Regenerated `report_data.json` and all figures: F1-F9 (.png/.pdf)
+byte-identical to committed and `report_data.json` changed only by the ADDED
+`f10_replicate_mdc` key (every existing value byte-identical). As in the
+2026-06-27/28 passes, regenerating `figures/F2.pdf` reproduces the same
+pre-existing environment-level 1-byte difference (115758 → 115757) unrelated to
+this change, so the committed F2.pdf bytes were restored/left untouched. F10.png
+and F10.pdf are byte-identical across two consecutive renders.
+
+**Out of scope (not performed):** No new science, no new dependency, no new sigma
+values, no new constants; no existing `report_data.json` value was altered.
+
+**Sign-off:** Avin Gupta, 2026-06-28.
+
+---
+
+## 2026-06-28 — Implementer (agent session): docs/ file organization toward v0.2.0
 
 **Role:** Implementer (file relocation + path-reference plumbing only). Authored
-no interpretation; changed no number, citation, figure, or `report_data.json` value.
+no interpretation; changed no number, citation, figure, or `report_data.json`
+value.
 
-**What this session did (facts):**
+**Work performed:**
+
+What this session did (facts):
 - Created `docs/provenance/` and relocated two files into it with `git mv`
   (history preserved, contents byte-unchanged): `docs/ai_usage_log.md` →
   `docs/provenance/ai_usage_log.md`; `docs/progress_journal.md` →
@@ -928,30 +1174,33 @@ no interpretation; changed no number, citation, figure, or `report_data.json` va
 - Updated only the enumerated PATH references to the new provenance path (bare
   prose mentions left unchanged): `README.md` (link text + target),
   `docs/report_template.md`, `docs/release_notes_v0.1.0.md`. `docs/report_draft.md`
-  was regenerated from the template via `scripts/build_report.py` (not hand-edited),
-  so its disclosure path string updated automatically.
-- Verification (without RUN_FULL_STUDY; from committed parquet only):
-  `python3 -m pytest -q` → 792 passed, 0 failed (pre-existing stage-guard
-  warnings); `python3 -m ruff check .` → All checks passed.
-  `grep -rn "docs/ai_usage_log|docs/progress_journal"` over `README.md` and `docs/`
-  (excluding the moved files' own contents) → zero old-path hits.
-  Regenerated `report_data.json` + figures + `report_draft.md`: `report_data.json`
-  byte-identical to committed; figures F1–F10 (.png/.pdf) byte-identical after
-  restoring `figures/F2.pdf` to its committed bytes (regeneration reproduced the
-  same known pre-existing environment-level 1-byte deflate difference,
-  115758 → 115757, unrelated to this change). The only byte-stable content change
-  in `report_draft.md` was the ai_usage_log PATH string
-  (`docs/ai_usage_log.md` → `docs/provenance/ai_usage_log.md`). `docs/report.pdf`
-  was re-rendered to reflect the updated draft (it embeds a non-reproducible build
-  timestamp and cannot be byte-diffed).
+  was regenerated from the template via `scripts/build_report.py` (not
+  hand-edited), so its disclosure path string updated automatically.
 
-**What was NOT done:** did NOT edit the contents of `ai_usage_log.md`,
+**Decisions and clarifications:** None recorded.
+
+**Verification:** Without RUN_FULL_STUDY (from committed parquet only): `python3
+-m pytest -q` → 792 passed, 0 failed (pre-existing stage-guard warnings); `python3
+-m ruff check .` → All checks passed. `grep -rn
+"docs/ai_usage_log|docs/progress_journal"` over `README.md` and `docs/` (excluding
+the moved files' own contents) → zero old-path hits. Regenerated `report_data.json`
++ figures + `report_draft.md`: `report_data.json` byte-identical to committed;
+figures F1–F10 (.png/.pdf) byte-identical after restoring `figures/F2.pdf` to its
+committed bytes (regeneration reproduced the same known pre-existing
+environment-level 1-byte deflate difference, 115758 → 115757, unrelated to this
+change). The only byte-stable content change in `report_draft.md` was the
+ai_usage_log PATH string (`docs/ai_usage_log.md` →
+`docs/provenance/ai_usage_log.md`). `docs/report.pdf` was re-rendered to reflect
+the updated draft (it embeds a non-reproducible build timestamp and cannot be
+byte-diffed).
+
+**Out of scope (not performed):** Did NOT edit the contents of `ai_usage_log.md`,
 `progress_journal.md`, or `validation_plan.md` beyond this one log append. Did NOT
 author any interpretive/finding/verdict prose. Did NOT alter any number, citation,
 constant, `report_data.json` value, or figure. Did NOT touch `protocol.md`, the Q2
-verdict, `calibrations.yaml`, the science modules, the Tier-A/B truth, or the Day-6
-parquet. Did NOT move any file not listed, delete any file, create or change any
-tag, or cut any release. Did NOT run the full crossed study. Did NOT commit or push.
+verdict, `calibrations.yaml`, the science modules, the Tier-A/B truth, or the
+Day-6 parquet. Did NOT move any file not listed, delete any file, create or change
+any tag, or cut any release. Did NOT run the full crossed study. Did NOT commit or
+push.
 
-Signed: Avin Gupta - 2026-06-28
-
+**Sign-off:** Avin Gupta, 2026-06-28.
